@@ -63,32 +63,35 @@
           <button type="button" data-mode="commute" aria-pressed="false">Door to door</button>
         </div>
 
+        <!-- From and To: one card, two rows; swap sits inside the card on the right. -->
         <div class="stops">
-          <label class="field" data-icon="origin">
-            <span id="from-label">From station</span>
-            <span class="input-wrap"><input type="text" id="from" list="from-list" required enterkeyhint="next" placeholder="Bruxelles-Midi"><button type="button" class="clear-field" data-clear="from" aria-label="Clear From"><span aria-hidden="true">×</span></button></span>
-          </label>
-          <button type="button" class="my-location" id="my-location" hidden><span aria-hidden="true">📍</span> Use My Current Location</button>
+          <div class="stops-col">
+            <label class="field" data-icon="origin">
+              <span id="from-label">From station</span>
+              <span class="input-wrap"><input type="text" id="from" list="from-list" required enterkeyhint="next" placeholder="Bruxelles-Midi"><button type="button" class="clear-field" data-clear="from" aria-label="Clear From"><span aria-hidden="true">×</span></button></span>
+            </label>
+            <button type="button" class="my-location" id="my-location" hidden><span aria-hidden="true">📍</span> Use My Current Location</button>
+            <label class="field" data-icon="pin">
+              <span id="to-label">To station</span>
+              <span class="input-wrap"><input type="text" id="to" list="to-list" required enterkeyhint="search" placeholder="Gent-Sint-Pieters"><button type="button" class="clear-field" data-clear="to" aria-label="Clear To"><span aria-hidden="true">×</span></button></span>
+            </label>
+          </div>
           <button type="button" class="swap" id="swap" aria-label="Swap from and to">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M3 8l4-4 4 4M17 20V4M13 16l4 4 4-4"/></svg>
           </button>
-          <label class="field" data-icon="pin">
-            <span id="to-label">To station</span>
-            <span class="input-wrap"><input type="text" id="to" list="to-list" required enterkeyhint="search" placeholder="Gent-Sint-Pieters"><button type="button" class="clear-field" data-clear="to" aria-label="Clear To"><span aria-hidden="true">×</span></button></span>
-          </label>
         </div>
         <datalist id="from-list"></datalist>
         <datalist id="to-list"></datalist>
 
         <div class="when when-trip">
-          <label class="field" data-icon="when"><span>When</span>
+          <label class="field" data-icon="when"><span>Plan by</span>
             <select id="when-type">
-              <option value="depart">Leave at</option>
-              <option value="arrive">Arrive by</option>
+              <option value="depart">Departure</option>
+              <option value="arrive">Arrival</option>
             </select>
           </label>
           <label class="field" data-icon="calendar"><span>Date</span><span class="ghost-wrap"><input type="date" id="date" data-ghost="Today"></span></label>
-          <label class="field when-time" data-icon="clock"><span>Time</span><span class="ghost-wrap"><input type="time" id="time" data-ghost="Now"></span><button type="button" class="now-chip" id="now" hidden aria-label="Reset date and time to now">↺ Now</button></label>
+          <label class="field when-time" data-icon="clock"><span id="time-label">Departure time</span><span class="ghost-wrap"><input type="time" id="time" data-ghost="Now"></span><button type="button" class="now-chip" id="now" hidden aria-label="Reset date and time to now">↺ Now</button></label>
         </div>
 
         <button type="submit" class="btn primary btn-icon" id="search"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>Search</button>

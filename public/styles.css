@@ -245,17 +245,22 @@ input[type="text"], input[type="search"], input[type="password"], input[type="ti
 }
 input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
 
-/* From/To: the boxes on the left, the swap button beside them (like Google Maps), never on top. */
-.stops { position: relative; display: grid; gap: 8px; }
-/* Swap sits on the right edge between From and To (takes no room of its own), clear of the × buttons. */
+/* From and To: one card with two rows (a line between them); swap inside the card on the right,
+   centred between the rows. Nothing overlaps on any screen size. */
+.stops { display: flex; align-items: center; gap: 2px; padding-right: 8px; background: var(--field); border: 1px solid var(--field-line); border-radius: 14px; }
+.stops:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+.stops-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.stops .ifield { border: 0; border-radius: 0; background: transparent; }
+.stops .ifield:focus-within { box-shadow: none; }
+.stops-col > .ifield:last-of-type { border-top: 1px solid var(--line); }
+.stops .stop-hint { margin: -4px 0 8px 46px; }
+.stops .my-location { margin: 0 0 10px 12px; }
 .swap {
-  position: relative; z-index: 3; justify-self: end; margin: -26px -6px -26px 0;
-  width: var(--hit); height: var(--hit); border-radius: 50%;
-  border: 1px solid var(--line); background: var(--card); color: var(--accent); box-shadow: var(--shadow);
+  flex: none; width: var(--hit); height: var(--hit); border-radius: 50%;
+  border: 1px solid var(--line); background: var(--card); color: var(--accent);
   display: grid; place-items: center;
 }
 .swap:active { filter: brightness(0.92); }
-.stops .stop-hint { margin-top: -2px; }
 .stops input { padding-right: 40px; }
 /* × inside a filled stop field: one tap to empty it. Hidden while the field is empty. */
 .input-wrap { position: relative; display: block; }
@@ -911,6 +916,9 @@ input::-webkit-date-and-time-value { text-align: left; }
 .when-trip > .when-time { grid-column: 1 / -1; }
 .when-time .ghost::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; background: var(--ok); vertical-align: 1px; animation: now-pulse 1.8s infinite; box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 60%, transparent); }
 .when-time .ghost { color: var(--ok); }
+/* Arrival with no time yet: a neutral "Pick a time" hint, no live dot. */
+.when-time.arrive .ghost { color: var(--muted); }
+.when-time.arrive .ghost::before { display: none; }
 @keyframes now-pulse { 70% { box-shadow: 0 0 0 6px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
 @media (prefers-reduced-motion: reduce) { .when-time .ghost::before { animation: none; } }
 .now-chip { position: relative; z-index: 2; flex: none; min-height: 36px; min-width: var(--hit); padding: 0 12px; border-radius: 999px; border: 1.5px solid var(--ok); background: var(--card); color: var(--ok); font-weight: 750; font-size: var(--t-subhead); }

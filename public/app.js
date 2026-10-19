@@ -440,6 +440,13 @@ $("#date").min = todayIso();
 
 // Grey hint inside empty date/time fields ("Today", "Now", "Pick a date").
 function refreshGhosts() {
+  // The time box follows "Plan by": Departure time (empty = now) or Arrival time (pick one).
+  const arrive = $("#when-type").value === "arrive";
+  $("#time-label").textContent = arrive ? "Arrival time" : "Departure time";
+  $("#time").dataset.ghost = arrive ? "Pick a time" : "Now";
+  const timeGhost = $("#time").parentElement.querySelector(".ghost");
+  if (timeGhost) timeGhost.textContent = $("#time").dataset.ghost;
+  $("#time").closest(".when-time")?.classList.toggle("arrive", arrive);
   for (const input of document.querySelectorAll("input[data-ghost]")) input.parentElement.classList.toggle("is-empty", !input.value);
   // "↺ Now" only when another date or time is picked (empty already means now).
   const now = document.getElementById("now");
@@ -454,15 +461,16 @@ for (const input of document.querySelectorAll("input[data-ghost]")) {
   for (const ev of ["input", "change", "blur"]) input.addEventListener(ev, refreshGhosts);
 }
 refreshGhosts();
+$("#when-type").addEventListener("change", refreshGhosts);
 
 $("#now").addEventListener("click", (e) => {
   e.preventDefault(); // inside the Time label: don't open the time picker
   $("#date").value = "";
   $("#time").value = "";
+  $("#when-type").value = "depart"; // "now" means leaving now
   refreshGhosts();
   // Show it worked: refresh the results for now, if any are on screen.
   if ($("#results").children.length && form.from && form.to) searchTrip();
-  $("#when-type").value = "depart";
 });
 
 // ---------- Stop fields: suggestions while typing, auto-select when you leave the field ----------
@@ -1860,7 +1868,7 @@ function openTripSheet(place) {
      <div class="sheet-label">When</div>
      <div class="sheet-chips" data-group="when">${whenChips.map(([v, t], i) => `<button type="button" class="pick${i ? "" : " on"}" data-when="${v}" aria-pressed="${!i}">${t}</button>`).join("")}</div>
      <div class="sheet-time" hidden>
-       <div class="seg" role="group" aria-label="Leave or arrive"><button type="button" data-arrive="0" aria-pressed="true">Leave at</button><button type="button" data-arrive="1" aria-pressed="false">Arrive by</button></div>
+       <div class="seg" role="group" aria-label="Plan by"><button type="button" data-arrive="0" aria-pressed="true">Departure</button><button type="button" data-arrive="1" aria-pressed="false">Arrival</button></div>
        <div class="sheet-time-row"><input type="date" class="sheet-input" id="sheet-date" aria-label="Date" min="${todayIso()}" value="${todayIso()}"><input type="time" class="sheet-input" id="sheet-time" aria-label="Time"></div>
      </div>
      <div class="sheet-actions">
