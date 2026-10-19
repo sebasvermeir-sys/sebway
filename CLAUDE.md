@@ -1,6 +1,6 @@
 # Sebway
 
-Belgian commuter PWA (SNCB · STIB · De Lijn), installable on phone and PC. School capstone, Evidence Audit Tue 20 Oct 2026.
+Belgian commuter PWA (SNCB · STIB · De Lijn), installable on phone and PC. School capstone: Evidence Audit Thu 22 or Fri 23 Oct 2026 (group slot), capstone bundle deadline Fri 30 Oct 2026, 23:59.
 
 ## Architecture
 - One Cloudflare Worker (`sebway`, at **https://sebway.app**, custom domain) serves the app from `public/` and the API on `/api/*` (`src/index.ts`). The old workers.dev address is a separate tiny Worker (`moved/`, deploy with `npx wrangler deploy -c moved/wrangler.jsonc`): a "Sebway has moved" page whose button passes the device id (+ name, theme) in the URL #fragment; the app adopts it on load (`movedIn`). No crons there.
