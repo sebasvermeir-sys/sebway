@@ -31,6 +31,10 @@ Belgian commuter PWA (SNCB · STIB · De Lijn), installable on phone and PC. Sch
 - Layouts must survive 200% text: no fixed px columns, let text wrap, rows stack via the container query at the end of the stylesheet.
 - Buttons: title case, a pressed state, and destructive actions confirm first.
 
+## Git and publishing
+- Public repo: https://github.com/sebasvermeir-sys/sebway (MIT). Push **only `main`** (`git push origin main`). Never `git push --all` or `--tags`: the local branch `private-history` (full old history with personal details) and local tags must never be uploaded.
+- Commits are signed `sebasvermeir-sys <283285302+sebasvermeir-sys@users.noreply.github.com>` (repo git config). Before pushing, keep out: secrets, the MCP's address, personal notes (`notes/` is git-ignored), the user's school or personal addresses.
+
 ## Commands
 - `npm run dev`: local dev at http://localhost:8787 (uses the deployed MCP via a remote binding)
 - `npm run check`: typecheck
