@@ -601,6 +601,9 @@ function offerDoorToDoor() {
   });
 }
 
+/** Suggestions wait until you've stopped typing for this long (not at every short pause). */
+const SUGGEST_PAUSE_MS = 800;
+
 function attachStopField(input, list, operatorFor) {
   let timer;
   let controller;
@@ -609,8 +612,10 @@ function attachStopField(input, list, operatorFor) {
     for (const k of ["stopId", "stopName", "stopLat", "stopLon"]) delete input.dataset[k];
     stopHint(input);
     clearTimeout(timer);
+    controller?.abort();
+    list.innerHTML = ""; // no stale suggestions while you're still typing
     const q = input.value.trim();
-    if (q.length < 2) return;
+    if (q.length < 3) return;
     timer = setTimeout(async () => {
       controller?.abort();
       controller = new AbortController();
@@ -631,7 +636,7 @@ function attachStopField(input, list, operatorFor) {
       } catch {
         // Suggestions are optional; typing still works.
       }
-    }, 300);
+    }, SUGGEST_PAUSE_MS);
   });
   // Leaving the field (or picking a suggestion) selects the stop.
   input.addEventListener("change", () => {
@@ -1770,7 +1775,9 @@ function openPlaceSheet(existing) {
         spot = null;
         clearTimeout(timer);
         const text = q.value.trim();
-        if (text.length < 2) return (list.innerHTML = "");
+        ctrl?.abort();
+        list.innerHTML = ""; // no stale suggestions while you're still typing
+        if (text.length < 3) return;
         timer = setTimeout(async () => {
           ctrl?.abort();
           ctrl = new AbortController();
@@ -1794,7 +1801,7 @@ function openPlaceSheet(existing) {
             q.value = it.name;
             list.innerHTML = `<li class="sheet-picked">✓ ${esc(it.icon)} ${esc(it.name)}</li>`;
           };
-        }, 300);
+        }, SUGGEST_PAUSE_MS);
       });
       if (!existing) setTimeout(() => q.focus(), 300);
       const read = mountPicker(sheet, () => {
