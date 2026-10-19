@@ -1,0 +1,7 @@
+node_modules/
+.wrangler/
+.dev.vars
+.DS_Store
+
+# Personal notes (school planning, demo script, prompts): kept on this Mac, never published.
+notes/

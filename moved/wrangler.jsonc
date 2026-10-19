@@ -1,0 +1,10 @@
+{
+  // The old workers.dev address after Sebway moved to https://sebway.app.
+  // Deploy from this folder: npx wrangler deploy -c moved/wrangler.jsonc
+  // No crons (the sebway Worker sends all notifications), no data access.
+  "name": "semmute",
+  "main": "index.js",
+  "compatibility_date": "2026-10-01",
+  "observability": { "enabled": true },
+  "triggers": { "crons": [] }
+}

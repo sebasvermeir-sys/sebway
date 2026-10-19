@@ -1,0 +1,50 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "sebway",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+
+  // The app's own address. (The old Worker "semmute" now only shows a "Sebway has moved" page: moved/.)
+  "routes": [{ "pattern": "sebway.app", "custom_domain": true }],
+  "observability": { "enabled": true },
+
+  // The app (HTML/JS/CSS) is served from /public. The Worker only runs for /api/*.
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*", "/media/*"]
+  },
+
+  // Direct, private line to the Belgian Transit MCP (same Cloudflare account).
+  // remote: true lets `wrangler dev` use the deployed MCP.
+  "services": [
+    { "binding": "TRANSIT", "service": "belgian-transit-mcp", "remote": true }
+  ],
+
+  // Saved routes, boards and passes per device (key: device:<uuid>). Never holds the Claude key.
+  "kv_namespaces": [
+    { "binding": "DATA", "id": "a354c849d1e4445c9b6cf278f89d04db" }
+  ],
+
+  // Web Push. The public key is safe to publish; the private key is the secret VAPID_PRIVATE_JWK.
+  "vars": {
+    "VAPID_PUBLIC_KEY": "BIpdCbypI6TPosniGSzpPkXSRBENcVS9vKqr-2D9LCeKC31pVWReRvcbZlYtfzFunzZqZxhnYVSz1tPyICjtGsU",
+    "VAPID_SUBJECT": "https://sebway.app"
+  },
+
+  // Every 5 min: alerts on saved routes and pass reminders. Every minute: live journeys on the lock screen.
+  "triggers": { "crons": ["*/5 * * * *", "* * * * *"] },
+
+  // Spam guards per device: chat messages and transit lookups per minute.
+  "ratelimits": [
+    { "name": "CHAT_LIMIT", "namespace_id": "4801", "simple": { "limit": 6, "period": 60 } },
+    { "name": "API_LIMIT", "namespace_id": "4802", "simple": { "limit": 60, "period": 60 } }
+  ]
+
+  // Secrets (never in this file):
+  //   SEBWAY_TOKEN       – bearer token for the MCP (structured JSON output)
+  //   VAPID_PRIVATE_JWK  – private key for Web Push
+  // There is no server-side Claude key: each user enters their own in Settings and the app
+  // sends it as X-Claude-Key with chat requests. It is used for that request only, never stored.
+  // Local dev: put them in .dev.vars. Production: `npx wrangler secret put SEBWAY_TOKEN`.
+}

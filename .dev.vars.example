@@ -1,0 +1,9 @@
+# Copy this file to .dev.vars and fill in the value. .dev.vars is never committed.
+SEBWAY_TOKEN=
+
+# Web Push private key (JWK, single-quoted). Public key is in wrangler.jsonc.
+VAPID_PRIVATE_JWK=
+
+# Local testing only: the app never uses a server-side Claude key.
+# Each user enters their own key in Settings. Tests send it as X-Claude-Key.
+ANTHROPIC_API_KEY=

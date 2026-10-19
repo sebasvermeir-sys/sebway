@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Sebway</title>
+  <meta name="description" content="SNCB, STIB and De Lijn in one app: live trips, delays, disruptions and a chat that only uses real data.">
+  <meta name="theme-color" content="#f3f5fb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#050505" media="(prefers-color-scheme: dark)">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Sebway">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/theme.js"></script>
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a href="/" class="brand" id="home-link" aria-label="Sebway, go to home">
+      <img src="/icons/icon-192.png" alt="">
+      <h1>Sebway</h1>
+    </a>
+    <span class="offline" id="offline" hidden>Offline</span>
+  </header>
+
+  <nav class="tabbar" aria-label="Sections">
+    <button type="button" data-view="trip" aria-current="page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8 17c6 0 2-10 8-10"/></svg>
+      Trip
+    </button>
+    <button type="button" data-view="boards">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h6M7 13h10M7 17h4"/></svg>
+      Boards
+    </button>
+    <button type="button" data-view="chat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
+      Chat
+    </button>
+    <button type="button" data-view="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      Settings
+    </button>
+  </nav>
+
+  <main>
+    <!-- ================= Trip ================= -->
+    <section id="view-trip" class="view">
+      <div class="line-divider" aria-hidden="true"></div>
+      <div id="journey-banner"></div>
+      <div id="passes-strip"></div>
+      <div id="saved-routes"></div>
+
+      <form id="trip-form" class="card" autocomplete="off">
+        <div class="seg" role="group" aria-label="Trip type">
+          <button type="button" data-mode="train" aria-pressed="true">Train</button>
+          <button type="button" data-mode="commute" aria-pressed="false">Door to door</button>
+        </div>
+
+        <div class="stops">
+          <label class="field" data-icon="origin">
+            <span id="from-label">From station</span>
+            <span class="input-wrap"><input type="text" id="from" list="from-list" required enterkeyhint="next" placeholder="Bruxelles-Midi"><button type="button" class="clear-field" data-clear="from" aria-label="Clear From"><span aria-hidden="true">×</span></button></span>
+          </label>
+          <button type="button" class="my-location" id="my-location" hidden><span aria-hidden="true">📍</span> Use My Current Location</button>
+          <button type="button" class="swap" id="swap" aria-label="Swap from and to">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M3 8l4-4 4 4M17 20V4M13 16l4 4 4-4"/></svg>
+          </button>
+          <label class="field" data-icon="pin">
+            <span id="to-label">To station</span>
+            <span class="input-wrap"><input type="text" id="to" list="to-list" required enterkeyhint="search" placeholder="Gent-Sint-Pieters"><button type="button" class="clear-field" data-clear="to" aria-label="Clear To"><span aria-hidden="true">×</span></button></span>
+          </label>
+        </div>
+        <datalist id="from-list"></datalist>
+        <datalist id="to-list"></datalist>
+
+        <div class="when when-trip">
+          <label class="field" data-icon="when"><span>When</span>
+            <select id="when-type">
+              <option value="depart">Leave at</option>
+              <option value="arrive">Arrive by</option>
+            </select>
+          </label>
+          <label class="field" data-icon="calendar"><span>Date</span><span class="ghost-wrap"><input type="date" id="date" data-ghost="Today"></span></label>
+          <label class="field when-time" data-icon="clock"><span>Time</span><span class="ghost-wrap"><input type="time" id="time" data-ghost="Now"></span><button type="button" class="now-chip" id="now" hidden aria-label="Reset date and time to now">↺ Now</button></label>
+        </div>
+
+        <button type="submit" class="btn primary btn-icon" id="search"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>Search</button>
+      </form>
+
+      <div id="results" aria-live="polite"></div>
+
+      <h2 class="section-title" id="disruptions-title" hidden>Disruptions on your route</h2>
+      <div id="disruptions"></div>
+
+      <h2 class="section-title">News &amp; disruptions</h2>
+      <div class="filter-chips" id="news-filters" role="group" aria-label="Filter news">
+        <button type="button" data-filter="all" aria-pressed="true">All</button>
+        <button type="button" data-filter="strike" aria-pressed="false">Strikes</button>
+        <button type="button" data-filter="sncb" aria-pressed="false">SNCB</button>
+        <button type="button" data-filter="stib" aria-pressed="false">STIB</button>
+        <button type="button" data-filter="planned" aria-pressed="false">Planned works</button>
+      </div>
+      <div id="news"></div>
+    </section>
+
+    <!-- ================= Journey (opened from a trip card, not a tab) ================= -->
+    <section id="view-journey" class="view" hidden aria-label="Journey in progress"></section>
+
+    <!-- ================= Boards ================= -->
+    <section id="view-shared" class="view" hidden aria-label="Shared trip"></section>
+
+    <section id="view-boards" class="view" hidden>
+      <div class="line-divider" aria-hidden="true"></div>
+      <form id="board-form" class="card" autocomplete="off">
+        <label class="field" data-icon="stop">
+          <span>Add a stop</span>
+          <input type="text" id="board-stop" list="board-list" required placeholder="Trône, Bruxelles-Midi, Heuvelpoort…">
+        </label>
+        <datalist id="board-list"></datalist>
+        <div class="when board-when-row">
+          <label class="field" data-icon="bus"><span>Transport</span>
+          <select id="board-operator">
+            <option value="">Any</option>
+            <option value="sncb">Trains (SNCB)</option>
+            <option value="stib">Metro, tram, bus in Brussels (STIB)</option>
+            <option value="delijn">Bus, tram in Flanders (De Lijn)</option>
+          </select>
+          </label>
+          <button type="submit" class="btn">Add</button>
+        </div>
+      </form>
+      <div id="boards"></div>
+    </section>
+
+    <!-- ================= Chat ================= -->
+    <section id="view-chat" class="view" hidden>
+      <div class="line-divider" aria-hidden="true"></div>
+      <div class="chat-log" id="chat-log" aria-live="polite"></div>
+      <form class="chat-form" id="chat-form">
+        <textarea id="chat-input" rows="1" placeholder="Ask about your trip…" aria-label="Message" enterkeyhint="send"></textarea>
+        <button type="submit" class="btn" id="chat-send">Send</button>
+      </form>
+    </section>
+
+    <!-- ================= Settings ================= -->
+    <section id="view-settings" class="view" hidden>
+      <div class="line-divider" aria-hidden="true"></div>
+      <h2 class="section-title">Appearance</h2>
+      <div class="card">
+        <div class="seg" role="group" aria-label="Theme" id="theme-seg" style="margin-bottom:0">
+          <button type="button" data-theme-choice="auto" aria-pressed="true">Auto</button>
+          <button type="button" data-theme-choice="light" aria-pressed="false">Light</button>
+          <button type="button" data-theme-choice="dark" aria-pressed="false">Dark</button>
+        </div>
+        <p class="small muted" style="margin-bottom:0">Auto follows your phone's light or dark mode.</p>
+      </div>
+
+      <h2 class="section-title">Claude API key</h2>
+      <div class="card">
+        <p class="small muted" style="margin-top:0">
+          The chat runs on your own Claude account. Your key is saved <strong>only on this device</strong>.
+          It is sent with each chat message to Sebway's server, which passes it to Claude for that one
+          request and never stores it. Usage is billed to your Anthropic account.
+        </p>
+        <label class="field" data-icon="key">
+          <span>API key</span>
+          <div class="key-row">
+            <input type="password" id="claude-key" placeholder="sk-ant-…" autocomplete="off" autocapitalize="off" spellcheck="false">
+            <button type="button" class="btn" id="key-show" aria-label="Show key">Show</button>
+          </div>
+        </label>
+        <div class="status-line" id="key-status" role="status"></div>
+        <div class="settings-actions">
+          <button type="button" class="btn primary" id="key-save">Save &amp; Check</button>
+          <button type="button" class="btn" id="key-remove">Remove Key</button>
+        </div>
+        <p class="small muted">Get a key at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.</p>
+      </div>
+
+      <h2 class="section-title">Notifications</h2>
+      <div class="card">
+        <p class="small muted" style="margin-top:0">
+          Sebway checks your saved routes every 5 minutes and alerts you only for <strong>strikes and major disruptions</strong>
+          on them, and when a pass is about to run out. Never at night (23:00–07:00).
+        </p>
+        <p class="status-line" id="push-status" role="status"></p>
+        <div class="settings-actions">
+          <button type="button" class="btn primary" id="push-on">Turn On Alerts</button>
+          <button type="button" class="btn" id="push-test" hidden>Send Test Alert</button>
+          <button type="button" class="btn" id="push-off" hidden>Turn Off</button>
+        </div>
+      </div>
+
+      <h2 class="section-title">Your trips</h2>
+      <div class="card">
+        <label class="field" data-icon="person">
+          <span>Your first name (for the greeting, stays on this phone)</span>
+          <input type="text" id="user-name" maxlength="30" autocomplete="given-name" autocapitalize="words" placeholder="Optional">
+        </label>
+        <label class="field" data-icon="walk" style="margin-top:10px">
+          <span>Minutes from your door to the station</span>
+          <input type="number" id="walk-min" min="0" max="90" step="1" inputmode="numeric">
+        </label>
+        <p class="small muted" style="margin-bottom:0">Used for "Leave in … min" on train trips. Door-to-door trips include the walk already.</p>
+      </div>
+
+      <h2 class="section-title">My places &amp; routes</h2>
+      <div class="card" id="routes-manage"></div>
+
+      <h2 class="section-title">Passes</h2>
+      <div class="card">
+        <div id="passes-manage"></div>
+        <form id="pass-form" autocomplete="off" class="pass-form">
+          <label class="field" data-icon="ticket"><span>Pass name</span><input type="text" id="pass-name" required placeholder="MOBIB school pass"></label>
+          <label class="field" data-icon="bus"><span>Operator</span>
+            <select id="pass-operator">
+              <option value="sncb">SNCB</option>
+              <option value="stib">STIB</option>
+              <option value="delijn">De Lijn</option>
+              <option value="tec">TEC</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+          <label class="field" data-icon="calendar"><span>Valid until (last day)</span><span class="ghost-wrap"><input type="date" id="pass-until" required data-ghost="Pick a date"></span></label>
+          <label class="field" data-icon="bell"><span>Remind me (days before)</span><input type="number" id="pass-remind" min="0" max="60" value="7" inputmode="numeric"></label>
+          <button type="submit" class="btn primary">Add Pass</button>
+        </form>
+      </div>
+
+      <h2 class="section-title">Help</h2>
+      <div class="card">
+        <button type="button" class="btn" id="tutorial-again">Show Tutorial Again</button>
+      </div>
+
+      <h2 class="section-title">Install</h2>
+      <div class="card" id="install-card">
+        <p id="install-text" style="margin:0"></p>
+        <button type="button" class="btn primary" id="install-btn" hidden>Install Sebway</button>
+      </div>
+
+      <h2 class="section-title">Data sources</h2>
+      <div class="card">
+        <dl class="credits">
+          <dt>SNCB trains</dt><dd>iRail API (api.irail.be), live delays and platforms</dd>
+          <dt>STIB</dt><dd>STIB-MIVB open data, live waiting times and traffic info</dd>
+          <dt>De Lijn</dt><dd>De Lijn open data, timetables and live delays</dd>
+          <dt>Door to door</dt><dd>Routes by <a href="https://transitous.org/sources/" target="_blank" rel="noopener">Transitous</a> (open timetables of SNCB, STIB, De Lijn, TEC)</dd>
+          <dt>Maps</dt><dd>&copy; OpenStreetMap contributors</dd>
+          <dt>Source code</dt><dd>Open source (MIT): <a href="https://github.com/sebasvermeir-sys/sebway" target="_blank" rel="noopener">github.com/sebasvermeir-sys/sebway</a></dd>
+          <dt>Logos</dt><dd>SNCB, STIB-MIVB, De Lijn and TEC logos are trademarks of their owners, shown only to identify your pass. Files from Wikimedia Commons (TEC logo: <a href="https://commons.wikimedia.org/wiki/File:LETEC.svg" target="_blank" rel="noopener">CC BY-SA 4.0</a>).</dd>
+          <dt>Chat</dt><dd>Claude (Anthropic). Times and delays in replies come only from the data above.</dd>
+        </dl>
+      </div>
+
+      <h2 class="section-title">Chat history</h2>
+      <div class="card">
+        <button type="button" class="btn" id="chat-clear">Clear Chat History</button>
+      </div>
+
+      <h2 class="section-title">Privacy</h2>
+      <div class="card privacy">
+        <p>Sebway has no accounts. This phone gets a random ID, and Sebway's server keeps only what you choose:</p>
+        <ul>
+          <li>your saved routes, boards, passes and walking time;</li>
+          <li>your notification subscription, if you turn alerts on;</li>
+          <li>during a journey, that trip, for lock-screen updates and a link you share (deleted 1 hour after arrival).</li>
+        </ul>
+        <p>Your location and chat history stay on this phone. Your Claude key stays on this phone too: it's passed to Claude with each chat message and never stored. Cloudflare, which hosts Sebway, keeps technical request logs (including places you searched) for a few days to fix errors.</p>
+        <p>Delete My Data removes everything Sebway's server has for this phone and resets the app here.</p>
+        <button type="button" class="btn danger" id="delete-data">Delete My Data</button>
+        <p id="delete-status" class="status-line" role="status"></p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

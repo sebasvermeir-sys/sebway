@@ -1,0 +1,878 @@
+{
+  "find_stop": {
+    "request": {
+      "name": "find_stop",
+      "arguments": {
+        "query": "midi"
+      }
+    },
+    "isError": false,
+    "structuredContent": {
+      "meta": {
+        "schema_version": "1",
+        "source": "irail,stib",
+        "fetched_at": "2026-10-05T19:00:00+02:00",
+        "stale": false
+      },
+      "stops": [
+        {
+          "id": "BE.NMBS.008814001",
+          "name": "Brussel-Zuid/Bruxelles-Midi",
+          "operator": "sncb",
+          "lat": 50.835707,
+          "lon": 4.336531,
+          "names": {
+            "fr": "Bruxelles-Midi",
+            "nl": "Brussel-Zuid",
+            "en": "Brussels-South/Brussels-Midi"
+          },
+          "lines": []
+        },
+        {
+          "id": "BE.NMBS.008814373",
+          "name": "Vorst-Zuid/Forest-Midi",
+          "operator": "sncb",
+          "lat": 50.809215,
+          "lon": 4.309167,
+          "names": {
+            "fr": "Forest-Midi",
+            "nl": "Vorst-Zuid",
+            "en": "Vorst-Zuid/Forest-Midi"
+          },
+          "lines": []
+        }
+      ]
+    }
+  },
+  "departures (SNCB)": {
+    "request": {
+      "name": "departures",
+      "arguments": {
+        "stop": "Bruxelles-Midi",
+        "limit": 3
+      }
+    },
+    "isError": false,
+    "structuredContent": {
+      "meta": {
+        "schema_version": "1",
+        "source": "irail",
+        "fetched_at": "2026-10-05T22:10:01+02:00",
+        "stale": false
+      },
+      "stop": {
+        "id": "BE.NMBS.008814001",
+        "name": "Brussel-Zuid/Bruxelles-Midi",
+        "operator": "sncb",
+        "lat": 50.835707,
+        "lon": 4.336531
+      },
+      "to": null,
+      "departures": [
+        {
+          "operator": "sncb",
+          "mode": "train",
+          "line": "IC",
+          "direction": "Tournai",
+          "scheduled": "2026-10-05T22:14:00+02:00",
+          "expected": "2026-10-05T22:14:00+02:00",
+          "delay_min": 0,
+          "realtime": true,
+          "platform": {
+            "scheduled": "19",
+            "actual": "19",
+            "changed": false
+          },
+          "cancelled": false,
+          "vehicle_id": "IC 1943",
+          "arrival_at_to": null
+        },
+        {
+          "operator": "sncb",
+          "mode": "train",
+          "line": "IC",
+          "direction": "Charleroi-Central",
+          "scheduled": "2026-10-05T22:15:00+02:00",
+          "expected": "2026-10-05T22:15:00+02:00",
+          "delay_min": 0,
+          "realtime": true,
+          "platform": {
+            "scheduled": "21",
+            "actual": "21",
+            "changed": false
+          },
+          "cancelled": false,
+          "vehicle_id": "IC 2043",
+          "arrival_at_to": null
+        }
+      ],
+      "ended_lines": []
+    }
+  },
+  "departures (STIB)": {
+    "request": {
+      "name": "departures",
+      "arguments": {
+        "stop": "Trône"
+      }
+    },
+    "isError": false,
+    "structuredContent": {
+      "meta": {
+        "schema_version": "1",
+        "source": "stib",
+        "fetched_at": "2026-10-06T00:40:10+02:00",
+        "stale": false
+      },
+      "stop": {
+        "id": "stib:TRONE",
+        "name": "Trone / Troon",
+        "operator": "stib",
+        "lat": 50.840748,
+        "lon": 4.365732
+      },
+      "to": null,
+      "departures": [
+        {
+          "operator": "stib",
+          "mode": "bus",
+          "line": "B71",
+          "direction": "Delta",
+          "scheduled": null,
+          "expected": "2026-10-06T00:42:49+02:00",
+          "delay_min": null,
+          "realtime": true,
+          "platform": null,
+          "cancelled": false,
+          "vehicle_id": null,
+          "arrival_at_to": null
+        },
+        {
+          "operator": "stib",
+          "mode": "metro",
+          "line": "M6",
+          "direction": "Elisabeth",
+          "scheduled": null,
+          "expected": "2026-10-06T00:42:57+02:00",
+          "delay_min": null,
+          "realtime": true,
+          "platform": null,
+          "cancelled": false,
+          "vehicle_id": null,
+          "arrival_at_to": null
+        }
+      ],
+      "ended_lines": [
+        "M2",
+        "B34"
+      ]
+    }
+  },
+  "departures (De Lijn, to)": {
+    "request": {
+      "name": "departures",
+      "arguments": {
+        "stop": "Sint-Pietersstation",
+        "operator": "delijn",
+        "to": "Heuvelpoort",
+        "time": "07:57",
+        "date": "2026-10-06",
+        "limit": 3
+      }
+    },
+    "isError": false,
+    "structuredContent": {
+      "meta": {
+        "schema_version": "1",
+        "source": "delijn",
+        "fetched_at": "2026-10-06T01:05:00+02:00",
+        "stale": false
+      },
+      "stop": {
+        "id": "delijn:2_204911_2_205914_2_205915_2_205916_2_201144_2_201242_2_205919_2_204912_2_200144_2_205921_2_212922_2_212923_2_212924_2_204916_2_204917_2_204918",
+        "name": "Gent Sint-Pietersstation",
+        "operator": "delijn",
+        "lat": 51.036312,
+        "lon": 3.710134
+      },
+      "to": {
+        "id": "delijn:2_201274_2_200274_2_200200_2_213202",
+        "name": "Gent Heuvelpoort",
+        "operator": "delijn",
+        "lat": 51.038693,
+        "lon": 3.725983
+      },
+      "departures": [
+        {
+          "operator": "delijn",
+          "mode": "bus",
+          "line": "B77",
+          "direction": "Beervelde Tollekenswegel",
+          "scheduled": "2026-10-06T08:00:00+02:00",
+          "expected": null,
+          "delay_min": null,
+          "realtime": false,
+          "platform": null,
+          "cancelled": false,
+          "vehicle_id": null,
+          "arrival_at_to": {
+            "scheduled": "2026-10-06T08:08:00+02:00",
+            "expected": null,
+            "delay_min": null,
+            "realtime": false
+          }
+        },
+        {
+          "operator": "delijn",
+          "mode": "bus",
+          "line": "B70",
+          "direction": "Gent Zuid",
+          "scheduled": "2026-10-06T08:00:00+02:00",
+          "expected": null,
+          "delay_min": null,
+          "realtime": false,
+          "platform": null,
+          "cancelled": false,
+          "vehicle_id": null,
+          "arrival_at_to": {
+            "scheduled": "2026-10-06T08:08:00+02:00",
+            "expected": null,
+            "delay_min": null,
+            "realtime": false
+          }
+        }
+      ],
+      "ended_lines": []
+    }
+  },
+  "arrivals": {
+    "request": {
+      "name": "arrivals",
+      "arguments": {
+        "stop": "midi",
+        "limit": 2
+      }
+    },
+    "isError": false,
+    "structuredContent": {
+      "meta": {
+        "schema_version": "1",
+        "source": "irail",
+        "fetched_at": "2026-10-05T22:10:00+02:00",
+        "stale": false
+      },
+      "stop": {
+        "id": "BE.NMBS.008814001",
+        "name": "Brussel-Zuid/Bruxelles-Midi",
+        "operator": "sncb",
+        "lat": 50.835707,
+        "lon": 4.336531
+      },
+      "to": null,
+      "departures": [
+        {
+          "operator": "sncb",
+          "mode": "train",
+          "line": "IC",
+          "direction": "Brussels Airport - Zaventem",
+          "scheduled": "2026-10-05T22:20:00+02:00",
+          "expected": "2026-10-05T22:20:00+02:00",
+          "delay_min": 0,
+          "realtime": true,
+          "platform": {
+            "scheduled": "13",
+            "actual": "13",
+            "changed": false
+          },
+          "cancelled": false,
+          "vehicle_id": "IC 2243",
+          "arrival_at_to": null
+        },
+        {
+          "operator": "sncb",
+          "mode": "train",
+          "line": "IC",
+          "direction": "Tongeren",
+          "scheduled": "2026-10-05T22:22:00+02:00",
+          "expected": "2026-10-05T22:22:00+02:00",
+          "delay_min": 0,
+          "realtime": true,
+          "platform": {
+            "scheduled": "19",
+            "actual": "19",
+            "changed": false
+          },
+          "cancelled": false,
+          "vehicle_id": "IC 1743",
+          "arrival_at_to": null
+        }
+      ],
+      "ended_lines": []
+    }
+  },
+  "plan_journey": {
+    "request": {
+      "name": "plan_journey",
+      "arguments": {
+        "from": "Gent-Sint-Pieters",
+        "to": "midi",
+        "time": "18:00",
+        "date": "2026-10-05",
+        "results": 2
+      }
+    },
+    "isError": false,
+    "structuredContent": {
+      "meta": {
+        "schema_version": "1",
+        "source": "irail",
+        "fetched_at": "2026-10-05T17:30:00+02:00",
+        "stale": false
+      },
+      "query": {
+        "from": {
+          "id": "BE.NMBS.008892007",
+          "name": "Gent-Sint-Pieters",
+          "operator": "sncb",
+          "lat": 51.035896,
+          "lon": 3.710675
+        },
+        "to": {
+          "id": "BE.NMBS.008814001",
+          "name": "Brussel-Zuid/Bruxelles-Midi",
+          "operator": "sncb",
+          "lat": 50.835707,
+          "lon": 4.336531
+        },
+        "time": "2026-10-05T18:00:00+02:00",
+        "arrive_by": false
+      },
+      "journeys": [
+        {
+          "departure": {
+            "scheduled": "2026-10-05T18:00:00+02:00",
+            "expected": "2026-10-05T18:03:00+02:00",
+            "delay_min": 3,
+            "realtime": true
+          },
+          "arrival": {
+            "scheduled": "2026-10-05T18:28:00+02:00",
+            "expected": "2026-10-05T18:30:00+02:00",
+            "delay_min": 2,
+            "realtime": true
+          },
+          "duration_min": 27,
+          "transfers": 0,
+          "cancelled": false,
+          "legs": [
+            {
+              "mode": "train",
+              "operator": "sncb",
+              "line": "IC",
+              "vehicle_id": "IC 1517",
+              "direction": "Hasselt",
+              "from": {
+                "id": "BE.NMBS.008892007",
+                "name": "Gent-Sint-Pieters",
+                "operator": "sncb",
+                "lat": 51.035896,
+                "lon": 3.710675
+              },
+              "to": {
+                "id": "BE.NMBS.008814001",
+                "name": "Brussel-Zuid/Bruxelles-Midi",
+                "operator": "sncb",
+                "lat": 50.835707,
+                "lon": 4.336531
+              },
+              "departure": {
+                "scheduled": "2026-10-05T18:00:00+02:00",
+                "expected": "2026-10-05T18:03:00+02:00",
+                "delay_min": 3,
+                "realtime": true,
+                "platform": {
+                  "scheduled": "11",
+                  "actual": "11",
+                  "changed": false
+                }
+              },
+              "arrival": {
+                "scheduled": "2026-10-05T18:28:00+02:00",
+                "expected": "2026-10-05T18:30:00+02:00",
+                "delay_min": 2,
+                "realtime": true,
+                "platform": {
+                  "scheduled": "4",
+                  "actual": "4",
+                  "changed": false
+                }
+              },
+              "cancelled": false,
+              "transfer_before": null
+            }
+          ],
+          "alerts": []
+        },
+        {
+          "departure": {
+            "scheduled": "2026-10-05T18:25:00+02:00",
+            "expected": "2026-10-05T18:34:00+02:00",
+            "delay_min": 9,
+            "realtime": true
+          },
+          "arrival": {
+            "scheduled": "2026-10-05T18:53:00+02:00",
+            "expected": "2026-10-05T19:10:00+02:00",
+            "delay_min": 17,
+            "realtime": true
+          },
+          "duration_min": 36,
+          "transfers": 0,
+          "cancelled": false,
+          "legs": [
+            {
+              "mode": "train",
+              "operator": "sncb",
+              "line": "IC",
+              "vehicle_id": "IC 517",
+              "direction": "Eupen",
+              "from": {
+                "id": "BE.NMBS.008892007",
+                "name": "Gent-Sint-Pieters",
+                "operator": "sncb",
+                "lat": 51.035896,
+                "lon": 3.710675
+              },
+              "to": {
+                "id": "BE.NMBS.008814001",
+                "name": "Brussel-Zuid/Bruxelles-Midi",
+                "operator": "sncb",
+                "lat": 50.835707,
+                "lon": 4.336531
+              },
+              "departure": {
+                "scheduled": "2026-10-05T18:25:00+02:00",
+                "expected": "2026-10-05T18:34:00+02:00",
+                "delay_min": 9,
+                "realtime": true,
+                "platform": {
+                  "scheduled": "10",
+                  "actual": "10",
+                  "changed": false
+                }
+              },
+              "arrival": {
+                "scheduled": "2026-10-05T18:53:00+02:00",
+                "expected": "2026-10-05T19:10:00+02:00",
+                "delay_min": 17,
+                "realtime": true,
+                "platform": {
+                  "scheduled": "7",
+                  "actual": "7",
+                  "changed": false
+                }
+              },
+              "cancelled": false,
+              "transfer_before": null
+            }
+          ],
+          "alerts": []
+        }
+      ]
+    }
+  },
+  "train_status": {
+    "request": {
+      "name": "train_status",
+      "arguments": {
+        "train_id": "IC 1943"
+      }
+    },
+    "isError": false,
+    "structuredContent": {
+      "meta": {
+        "schema_version": "1",
+        "source": "irail",
+        "fetched_at": "2026-10-05T22:10:00+02:00",
+        "stale": false
+      },
+      "vehicle_id": "IC 1943",
+      "origin": "Brussels Airport - Zaventem",
+      "destination": "Tournai",
+      "cancelled": false,
+      "stops": [
+        {
+          "stop": {
+            "id": "BE.NMBS.008819406",
+            "name": "Brussels Airport - Zaventem",
+            "operator": "sncb",
+            "lat": 50.896456,
+            "lon": 4.482076
+          },
+          "arrival": null,
+          "departure": {
+            "scheduled": "2026-10-05T21:43:00+02:00",
+            "expected": "2026-10-05T21:44:00+02:00",
+            "delay_min": 1,
+            "realtime": true,
+            "platform": {
+              "scheduled": "2",
+              "actual": "2",
+              "changed": false
+            }
+          },
+          "cancelled": false,
+          "passed": true
+        },
+        {
+          "stop": {
+            "id": "BE.NMBS.008812005",
+            "name": "Brussel-Noord/Bruxelles-Nord",
+            "operator": "sncb",
+            "lat": 50.859663,
+            "lon": 4.360846
+          },
+          "arrival": {
+            "scheduled": "2026-10-05T21:56:00+02:00",
+            "expected": "2026-10-05T21:56:00+02:00",
+            "delay_min": 0,
+            "realtime": true,
+            "platform": {
+              "scheduled": "5",
+              "actual": "5",
+              "changed": false
+            }
+          },
+          "departure": {
+            "scheduled": "2026-10-05T22:01:00+02:00",
+            "expected": "2026-10-05T22:04:00+02:00",
+            "delay_min": 3,
+            "realtime": true,
+            "platform": {
+              "scheduled": "5",
+              "actual": "5",
+              "changed": false
+            }
+          },
+          "cancelled": false,
+          "passed": true
+        }
+      ]
+    }
+  },
+  "disruptions": {
+    "request": {
+      "name": "disruptions",
+      "arguments": {
+        "station": "Trône",
+        "limit": 2
+      }
+    },
+    "isError": false,
+    "structuredContent": {
+      "meta": {
+        "schema_version": "1",
+        "source": "stib",
+        "fetched_at": "2026-10-06T00:40:00+02:00",
+        "stale": false
+      },
+      "total": 6,
+      "disruptions": [
+        {
+          "id": "stib:31078373",
+          "operator": "stib",
+          "type": "incident",
+          "severity": "major",
+          "title": "B78 B48 B37 B49 +9",
+          "description": "T4 interrupted between PORTE DE HAL and BERKENDAEL. Take the T- bus btw GARE DU MIDI and BERKENDAEL or B48.",
+          "lines": [
+            "B78",
+            "B48"
+          ],
+          "stops": [
+            {
+              "id": "stib:LOUISE",
+              "name": "Louise / Louiza",
+              "operator": "stib",
+              "lat": 50.835558,
+              "lon": 4.355126
+            },
+            {
+              "id": "stib:PORTE DE NAMUR",
+              "name": "Porte de Namur / Naamsepoort",
+              "operator": "stib",
+              "lat": 50.838525,
+              "lon": 4.362631
+            }
+          ],
+          "valid_from": null,
+          "valid_until": null,
+          "url": "https://www.stib-mivb.be/en/traffic-info"
+        },
+        {
+          "id": "stib:31071166",
+          "operator": "stib",
+          "type": "incident",
+          "severity": "minor",
+          "title": "B71",
+          "description": "Handover credence letters. On 7 Oct from 9.30 am to 1pm, bus 71 diverted between TROON/ TRONE-CENTRAAL STATION.",
+          "lines": [
+            "B71"
+          ],
+          "stops": [
+            {
+              "id": "stib:PORTE DE NAMUR",
+              "name": "Porte de Namur / Naamsepoort",
+              "operator": "stib",
+              "lat": 50.838525,
+              "lon": 4.362631
+            },
+            {
+              "id": "stib:TRONE",
+              "name": "Trone / Troon",
+              "operator": "stib",
+              "lat": 50.840748,
+              "lon": 4.365732
+            }
+          ],
+          "valid_from": null,
+          "valid_until": null,
+          "url": "https://www.stib-mivb.be/en/traffic-info"
+        }
+      ]
+    }
+  },
+  "composition": {
+    "request": {
+      "name": "composition",
+      "arguments": {
+        "train_id": "IC 1943"
+      }
+    },
+    "isError": false,
+    "structuredContent": {
+      "meta": {
+        "schema_version": "1",
+        "source": "irail",
+        "fetched_at": "2026-10-05T22:10:00+02:00",
+        "stale": false
+      },
+      "vehicle_id": "IC 1943",
+      "segments": [
+        {
+          "origin": "Brussels Airport - Zaventem",
+          "destination": "Tournai",
+          "cars": 8,
+          "length_m": null,
+          "material_types": [
+            "M6 BXCT",
+            "M6 BU ×3"
+          ],
+          "first_class_cars": [
+            4
+          ],
+          "bike_cars": [
+            5,
+            6
+          ],
+          "seats_first": 124,
+          "seats_second": 758,
+          "toilet_cars": 7
+        }
+      ]
+    }
+  },
+  "commute_check": {
+    "request": {
+      "name": "commute_check",
+      "arguments": {
+        "home": "Trône",
+        "destination": "Heuvelpoort",
+        "direction": "to_gent",
+        "time": "07:00",
+        "date": "2026-10-06",
+        "plans": 1
+      }
+    },
+    "isError": false,
+    "structuredContent": {
+      "meta": {
+        "schema_version": "1",
+        "source": "irail,stib,delijn",
+        "fetched_at": "2026-10-05T23:00:00+02:00",
+        "stale": false
+      },
+      "query": {
+        "home": {
+          "id": "stib:TRONE",
+          "name": "Trone / Troon",
+          "operator": "stib",
+          "lat": 50.840748,
+          "lon": 4.365732
+        },
+        "destination": {
+          "id": "delijn:2_201274_2_200274_2_200200_2_213202",
+          "name": "Gent Heuvelpoort",
+          "operator": "delijn",
+          "lat": 51.038693,
+          "lon": 3.725983
+        },
+        "direction": "to_gent",
+        "time": "2026-10-06T07:00:00+02:00"
+      },
+      "journeys": [
+        {
+          "departure": {
+            "scheduled": "2026-10-06T07:15:00+02:00",
+            "expected": null,
+            "delay_min": null,
+            "realtime": false
+          },
+          "arrival": {
+            "scheduled": "2026-10-06T08:10:00+02:00",
+            "expected": null,
+            "delay_min": null,
+            "realtime": false
+          },
+          "duration_min": 55,
+          "transfers": 2,
+          "cancelled": false,
+          "legs": [
+            {
+              "mode": "metro",
+              "operator": "stib",
+              "line": "M2/M6",
+              "vehicle_id": null,
+              "direction": "Simonis/Roi Baudouin",
+              "from": {
+                "id": "stib:TRONE",
+                "name": "Trone / Troon",
+                "operator": "stib",
+                "lat": 50.840748,
+                "lon": 4.365732
+              },
+              "to": {
+                "id": "stib:GARE DU MIDI",
+                "name": "Gare du Midi / Zuidstation",
+                "operator": "stib",
+                "lat": 50.836874,
+                "lon": 4.337745
+              },
+              "departure": {
+                "scheduled": "2026-10-06T07:15:00+02:00",
+                "expected": null,
+                "delay_min": null,
+                "realtime": false,
+                "platform": null
+              },
+              "arrival": {
+                "scheduled": "2026-10-06T07:23:00+02:00",
+                "expected": null,
+                "delay_min": null,
+                "realtime": false,
+                "platform": null
+              },
+              "cancelled": false,
+              "transfer_before": null
+            },
+            {
+              "mode": "train",
+              "operator": "sncb",
+              "line": "IC",
+              "vehicle_id": "IC 1528",
+              "direction": "Blankenberge",
+              "from": {
+                "id": "BE.NMBS.008814001",
+                "name": "Brussel-Zuid/Bruxelles-Midi",
+                "operator": "sncb",
+                "lat": 50.835707,
+                "lon": 4.336531
+              },
+              "to": {
+                "id": "BE.NMBS.008892007",
+                "name": "Gent-Sint-Pieters",
+                "operator": "sncb",
+                "lat": 51.035896,
+                "lon": 3.710675
+              },
+              "departure": {
+                "scheduled": "2026-10-06T07:29:00+02:00",
+                "expected": "2026-10-06T07:29:00+02:00",
+                "delay_min": 0,
+                "realtime": true,
+                "platform": {
+                  "scheduled": "9",
+                  "actual": "9",
+                  "changed": false
+                }
+              },
+              "arrival": {
+                "scheduled": "2026-10-06T07:57:00+02:00",
+                "expected": "2026-10-06T07:57:00+02:00",
+                "delay_min": 0,
+                "realtime": true,
+                "platform": {
+                  "scheduled": "12",
+                  "actual": "12",
+                  "changed": false
+                }
+              },
+              "cancelled": false,
+              "transfer_before": {
+                "at": {
+                  "id": "BE.NMBS.008814001",
+                  "name": "Brussel-Zuid/Bruxelles-Midi",
+                  "operator": "sncb",
+                  "lat": 50.835707,
+                  "lon": 4.336531
+                },
+                "scheduled_min": 6,
+                "expected_min": 6
+              }
+            }
+          ],
+          "alerts": [],
+          "leave_by": "2026-10-06T07:10:00+02:00",
+          "arrive_at": "2026-10-06T08:15:00+02:00"
+        }
+      ],
+      "warnings": [
+        "STIB M6: T7 62 interrupted btw HEYSEL and SAINT-LAMBERT Take T19 to STUYVENBERGH then M6 to HEYSEL/HEIZEL.",
+        "De Lijn B55 · Unexpected disruption: Line 55 towards Zelzate Busstation: Works at Ovaal van Wippelgem in Evergem ended earlier. Normal route resumed"
+      ]
+    }
+  },
+  "error": {
+    "request": {
+      "name": "departures",
+      "arguments": {
+        "stop": "Antwerpen",
+        "operator": "sncb"
+      }
+    },
+    "isError": true,
+    "structuredContent": {
+      "error": {
+        "code": "STOP_AMBIGUOUS",
+        "message": "Stop ambiguous: \"Antwerpen\" could be Antwerpen-Berchem, Antwerpen-Centraal, Antwerpen-Oost, Antwerpen-Haven. Call again with the exact name or id, e.g. \"Antwerpen-Berchem\".",
+        "retryable": false,
+        "candidates": [
+          {
+            "id": "BE.NMBS.008821121",
+            "name": "Antwerpen-Berchem",
+            "operator": "sncb",
+            "lat": 51.19923,
+            "lon": 4.432221
+          },
+          {
+            "id": "BE.NMBS.008821006",
+            "name": "Antwerpen-Centraal",
+            "operator": "sncb",
+            "lat": 51.2172,
+            "lon": 4.421101
+          }
+        ]
+      }
+    }
+  }
+}
