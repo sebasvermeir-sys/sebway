@@ -1074,3 +1074,9 @@ input::-webkit-date-and-time-value { text-align: left; }
 .js-time { display: grid; justify-items: end; gap: 4px; }
 .js-time .plat.sm { margin-left: 0; }
 .step-plat { display: flex; align-items: center; gap: 10px; margin-top: 10px; font-weight: 700; color: var(--muted); font-size: var(--t-subhead); }
+
+/* "New version" banner, above the tab bar. */
+.update-banner { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom)); z-index: 60; transform: translateX(-50%); width: min(calc(100% - 24px), 30rem); display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 16px; border-radius: 16px; background: var(--heading); color: var(--card); box-shadow: var(--shadow); font-weight: 700; font-size: var(--t-subhead); }
+.update-banner span { flex: 1; }
+.update-banner .btn { background: var(--card); color: var(--heading); border-color: var(--card); }
+.update-x { width: var(--hit); height: var(--hit); border: 0; background: none; color: inherit; font-size: 22px; line-height: 1; }

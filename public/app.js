@@ -3701,6 +3701,84 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/sw.js").catch(() => {});
 }
 
+// ---------- App updates ----------
+// The app checks sebway.app for a newer version (when opened, and from Settings). Updating loads the new
+// files and restarts the app in a second; Repair App clears the saved app files and reloads them fresh.
+// Neither touches saved data (places, routes, passes, Claude key, name, notifications), so nobody has to
+// delete the Home Screen icon and set everything up again.
+
+/** Must match CACHE ("sebway-vNN") in public/sw.js; a unit test checks they're the same. */
+const APP_VERSION = 53;
+let updateChecked = 0;
+
+async function latestVersion() {
+  const res = await fetch(`/sw.js?check=${Date.now()}`, { cache: "no-store" });
+  const m = res.ok ? /sebway-v(\d+)/.exec(await res.text()) : null;
+  return m ? Number(m[1]) : null;
+}
+
+async function applyUpdate() {
+  toast("Updating Sebway…");
+  try {
+    const reg = await navigator.serviceWorker?.getRegistration();
+    await reg?.update(); // the new helper installs and takes over right away
+  } catch {}
+  setTimeout(() => location.reload(), 1200);
+}
+
+function showUpdateBanner(latest) {
+  if (document.querySelector(".update-banner") || store.get("updateDismissed") === latest) return;
+  const bar = document.createElement("div");
+  bar.className = "update-banner";
+  bar.setAttribute("role", "status");
+  bar.innerHTML = `<span>✨ A new version of Sebway is ready</span><button type="button" class="btn small" data-update-now>Update</button><button type="button" class="update-x" aria-label="Not now">×</button>`;
+  bar.querySelector("[data-update-now]").addEventListener("click", applyUpdate);
+  bar.querySelector(".update-x").addEventListener("click", () => {
+    store.set("updateDismissed", latest);
+    bar.remove();
+  });
+  document.body.append(bar);
+}
+
+/** quiet: on open (banner only when there's an update); otherwise from Settings (always says something). */
+async function checkForUpdate({ quiet = true } = {}) {
+  const status = $("#update-status");
+  if (!quiet) status.textContent = "Checking…";
+  updateChecked = Date.now();
+  let latest = null;
+  try {
+    latest = await latestVersion();
+  } catch {}
+  if (latest === null) {
+    if (!quiet) status.textContent = "Couldn't check right now. Try again when you're online.";
+    return;
+  }
+  const newer = latest > APP_VERSION;
+  $("#update-now").hidden = !newer;
+  if (newer) {
+    if (!quiet) status.textContent = `Version ${latest} is available (you have ${APP_VERSION}).`;
+    else showUpdateBanner(latest);
+  } else if (!quiet) status.textContent = `You're up to date (version ${APP_VERSION}).`;
+}
+
+$("#app-version").textContent = String(APP_VERSION);
+$("#check-update").addEventListener("click", () => checkForUpdate({ quiet: false }));
+$("#update-now").addEventListener("click", applyUpdate);
+$("#repair-app").addEventListener("click", async () => {
+  if (!confirm("Repair Sebway? The app files are downloaded again. Your places, routes, passes, Claude key and settings stay.")) return;
+  $("#update-status").textContent = "Repairing…";
+  try {
+    for (const k of await caches.keys()) await caches.delete(k);
+    for (const r of (await navigator.serviceWorker?.getRegistrations()) ?? []) await r.unregister();
+  } catch {}
+  location.reload();
+});
+// Check a few seconds after opening, and when you come back to the app (at most every 30 minutes).
+setTimeout(() => checkForUpdate(), 4000);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && Date.now() - updateChecked > 30 * 60_000) checkForUpdate();
+});
+
 // ---------- Start ----------
 
 applyMode(form.mode);

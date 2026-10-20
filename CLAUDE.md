@@ -32,7 +32,7 @@ Belgian commuter PWA (SNCB · STIB · De Lijn), installable on phone and PC. Sch
 - Buttons: title case, a pressed state, and destructive actions confirm first.
 
 ## Service worker (public/sw.js)
-- Must never leave the Home Screen app blank (iOS shows a blank screen when a page load fails): pass navigation requests unchanged (`fetch(event.request)`, so Wi-Fi login/filter redirects work), save only `200`/basic/non-redirected answers, save the shell file by file, fall back to the saved app after 6 s or on failure, else the built-in "can't connect" page. Bump `CACHE` on every app change.
+- Must never leave the Home Screen app blank (iOS shows a blank screen when a page load fails): pass navigation requests unchanged (`fetch(event.request)`, so Wi-Fi login/filter redirects work), save only `200`/basic/non-redirected answers, save the shell file by file, fall back to the saved app after 6 s or on failure, else the built-in "can't connect" page. Bump `CACHE` on every app change, together with `APP_VERSION` in `public/app.js` (a unit test checks they match): that number drives the in-app update check (Settings → App: Check for Updates / Update Now / Repair App, plus a banner when a newer version is live).
 
 ## Git and publishing
 - Public repo: https://github.com/sebasvermeir-sys/sebway (MIT). Push **only `main`** (`git push origin main`). Never `git push --all` or `--tags`: the local branch `private-history` (full old history with personal details) and local tags must never be uploaded.
