@@ -1069,3 +1069,8 @@ input::-webkit-date-and-time-value { text-align: left; }
 .sheet-empty { padding: 8px 2px; color: var(--muted); font-size: var(--t-footnote); }
 .sheet-time { margin-top: 10px; display: grid; gap: 8px; }
 .sheet-time-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* Journey: platform signs in the step list (under the time) and big in the current step. */
+.js-time { display: grid; justify-items: end; gap: 4px; }
+.js-time .plat.sm { margin-left: 0; }
+.step-plat { display: flex; align-items: center; gap: 10px; margin-top: 10px; font-weight: 700; color: var(--muted); font-size: var(--t-subhead); }

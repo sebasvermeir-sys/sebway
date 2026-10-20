@@ -2866,7 +2866,8 @@ function journeySteps(j, dest) {
   steps.push({
     kind: "walk",
     title: j.walk_start_min ? `Walk to ${first.from.name}` : `Go to ${first.from.name}`,
-    detail: `${j.walk_start_min ? `${j.walk_start_min} min walk · ` : ""}${legLabel(first)} leaves ${hhmm(shownTime(first.departure))}${first.departure.platform ? ` · Pl. ${first.departure.platform.actual ?? first.departure.platform.scheduled}` : ""}`,
+    detail: `${j.walk_start_min ? `${j.walk_start_min} min walk · ` : ""}${legLabel(first)} leaves ${hhmm(shownTime(first.departure))}`,
+    plat: { p: first.departure.platform, stop: first.from, mode: first.mode },
     until: shownTime(first.departure),
     verb: "leaves",
     leg: first,
@@ -2877,7 +2878,8 @@ function journeySteps(j, dest) {
       steps.push({
         kind: "walk",
         title: `Change at ${leg.from.name}`,
-        detail: `${walk ? `${walk} min walk · ` : ""}${legLabel(leg)} → ${leg.direction ?? ""} leaves ${hhmm(shownTime(leg.departure))}${leg.departure.platform ? ` · Pl. ${leg.departure.platform.actual ?? leg.departure.platform.scheduled}` : ""}`,
+        detail: `${walk ? `${walk} min walk · ` : ""}${legLabel(leg)} → ${leg.direction ?? ""} leaves ${hhmm(shownTime(leg.departure))}`,
+        plat: { p: leg.departure.platform, stop: leg.from, mode: leg.mode },
         until: shownTime(leg.departure),
         verb: "leaves",
         leg,
@@ -2886,7 +2888,8 @@ function journeySteps(j, dest) {
     steps.push({
       kind: leg.mode,
       title: `${legLabel(leg)} → ${leg.direction ?? leg.to.name}`,
-      detail: `Get off at ${leg.to.name} · ${hhmm(shownTime(leg.arrival))}${leg.arrival.platform ? ` · Pl. ${leg.arrival.platform.actual ?? leg.arrival.platform.scheduled}` : ""}`,
+      detail: `Get off at ${leg.to.name} · ${hhmm(shownTime(leg.arrival))}`,
+      plat: { p: leg.arrival.platform, stop: leg.to, mode: leg.mode },
       until: shownTime(leg.arrival),
       verb: "arrives",
       leg,
@@ -2897,6 +2900,9 @@ function journeySteps(j, dest) {
   steps.push({ kind: "done", title: `You've arrived at ${dest}`, detail: "Have a good day!", until: null });
   return steps;
 }
+
+/** The platform sign for a journey step (departure platform before a ride, arrival platform during it). */
+const stepPlat = (st, size = "sm") => (st.plat ? platformHtml(st.plat.p, st.plat.stop, size, st.plat.mode) : "");
 
 /** Current step from the clock: the first step that hasn't finished yet. */
 function currentStepIndex(steps, now = Date.now()) {
@@ -3206,7 +3212,7 @@ async function showSharedTrip(token) {
             return `<li class="${i < cur ? "done" : i === cur ? "current" : ""}">
               <span class="js-icon ${esc(icon)}">${i < cur ? "✓" : stepIcon(icon)}</span>
               <span class="js-text"><strong>${esc(s.title.replace(/^You've arrived/, "Arrived"))}</strong><span class="small muted">${esc(s.detail.replace(/^Have a good day!$/, ""))}</span></span>
-              <span class="js-time">${s.until ? hhmm(s.until) : ""}</span>
+              <span class="js-time">${s.until ? hhmm(s.until) : ""}${stepPlat(s)}</span>
             </li>`;
           })
           .join("")}</ol>
@@ -3500,7 +3506,7 @@ function renderJourney() {
     setTimeout(() => recoverJourney("gps"), 0);
   }
 
-  dyn.innerHTML = `
+  const html = `
     <section class="card journey-top">
       <div class="jt-head">
         <div>
@@ -3525,6 +3531,7 @@ function renderJourney() {
         <div class="step-title">${esc(step.title)}</div>
         ${step.until ? `<div class="step-when">${esc(step.verb === "arrive" ? "You arrive" : step.ride ? `Arriving at ${step.leg.to.name}` : `${legLabel(step.leg)} leaves`)}</div><div class="step-countdown">${countdown(step.until, now).replace(/^in /, "")}</div>` : ""}
         <div class="step-detail">${esc(step.detail)}${step.leg ? ` ${statusPill(step.ride ? step.leg.arrival : step.leg.departure, step.leg.cancelled)}` : ""}</div>
+        ${step.plat?.p ? `<div class="step-plat">${step.ride ? "Arrives at" : "Leaves from"}${stepPlat(step, "lg")}</div>` : ""}
       </div>
     </section>
 
@@ -3538,11 +3545,26 @@ function renderJourney() {
         <li class="${i < cur ? "done" : i === cur ? "current" : ""}">
           <span class="js-icon ${esc(s.ride ? s.kind : s.kind === "done" ? "done" : "walk")}">${i < cur ? "✓" : stepIcon(s.ride ? s.kind : s.kind === "done" ? "done" : "walk")}</span>
           <span class="js-text"><strong>${esc(s.title)}</strong><span class="small muted">${esc(s.detail)}</span></span>
-          <span class="js-time">${s.until ? hhmm(s.until) : ""}</span>
+          <span class="js-time">${s.until ? hhmm(s.until) : ""}${stepPlat(s)}</span>
         </li>`)
         .join("")}
-    </ol>
-    ${next ? "" : ""}`;
+    </ol>`;
+
+  // Only rebuild when something visible changed (a new minute, the next step, new live times…).
+  // The progress bar and the vehicle just move. Rebuilding every few seconds made iPhone Safari jump
+  // back to the top while you were scrolling; when we do rebuild, the scroll position is kept.
+  const key = html.replace(/(width|left):[\d.]+%/g, "");
+  if (key !== dyn._key) {
+    const y = window.scrollY;
+    dyn.innerHTML = html;
+    dyn._key = key;
+    if (window.scrollY !== y) window.scrollTo(0, y);
+  } else {
+    const fill = dyn.querySelector(".jt-fill");
+    const veh = dyn.querySelector(".jt-vehicle");
+    if (fill) fill.style.width = `${pct}%`;
+    if (veh) veh.style.left = `${pct}%`;
+  }
 
   const status = document.getElementById("journey-status");
   if (status) {
