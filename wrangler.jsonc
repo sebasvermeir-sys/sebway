@@ -5,7 +5,10 @@
   "compatibility_date": "2026-10-01",
 
   // The app's own address. (The old Worker "semmute" now only shows a "Sebway has moved" page: moved/.)
-  "routes": [{ "pattern": "sebway.app", "custom_domain": true }],
+  "routes": [
+    { "pattern": "sebway.app", "custom_domain": true },
+    { "pattern": "www.sebway.app", "custom_domain": true }
+  ],
   "observability": { "enabled": true },
 
   // The app (HTML/JS/CSS) is served from /public. The Worker only runs for /api/*.
