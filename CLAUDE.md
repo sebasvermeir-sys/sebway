@@ -31,6 +31,9 @@ Belgian commuter PWA (SNCB · STIB · De Lijn), installable on phone and PC. Sch
 - Layouts must survive 200% text: no fixed px columns, let text wrap, rows stack via the container query at the end of the stylesheet.
 - Buttons: title case, a pressed state, and destructive actions confirm first.
 
+## Service worker (public/sw.js)
+- Must never leave the Home Screen app blank (iOS shows a blank screen when a page load fails): pass navigation requests unchanged (`fetch(event.request)`, so Wi-Fi login/filter redirects work), save only `200`/basic/non-redirected answers, save the shell file by file, fall back to the saved app after 6 s or on failure, else the built-in "can't connect" page. Bump `CACHE` on every app change.
+
 ## Git and publishing
 - Public repo: https://github.com/sebasvermeir-sys/sebway (MIT). Push **only `main`** (`git push origin main`). Never `git push --all` or `--tags`: the local branch `private-history` (full old history with personal details) and local tags must never be uploaded.
 - Commits are signed `sebasvermeir-sys <283285302+sebasvermeir-sys@users.noreply.github.com>` (repo git config). Before pushing, keep out: secrets, the MCP's address, personal notes (`notes/` is git-ignored), the user's school or personal addresses.
