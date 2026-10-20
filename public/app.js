@@ -2923,7 +2923,11 @@ function offTripMessage(step) {
   if (!position || !step?.leg || position.accuracy > 300) return null;
   const leg = step.leg;
   const now = Date.now();
+  // Only a fresh, precise fix can say you're not on board: underground (metro) the phone gets no new
+  // fixes and the last one is still at the station you left from.
+  const fresh = now - (position.at ?? 0) < 90_000 && position.accuracy <= 100;
   if (step.ride) {
+    if (!fresh) return null;
     const nearStart = distM(position, leg.from) < 250;
     if (nearStart && now > msOf(shownTime(leg.departure)) + 3 * 60_000) return `It looks like you missed the ${legLabel(leg)}.`;
     if (distToLine(position, legLine(leg)) > Math.max(2000, position.accuracy * 2)) return `You don't seem to be on the ${legLabel(leg)}.`;
@@ -3278,6 +3282,9 @@ function switchToRecovery() {
   journey.request = { path: request.path, params: { ...request.params, time: brusselsHm(firstDep), date: brusselsDay(firstDep) } };
   journey.updatedAt = new Date().toISOString();
   journey.recovered = (journey.recovered ?? 0) + 1;
+  delete journey.autoOffered;
+  delete journey.recoverMuted;
+  delete journey.missSeenAt;
   recovery = null;
   store.set(JOURNEY_KEY, journey);
   // Redraw the map for the new route.
@@ -3336,7 +3343,7 @@ async function prepareJourney(setStep) {
     await new Promise((resolve) => {
       navigator.geolocation.getCurrentPosition(
         (p) => {
-          position = { lat: p.coords.latitude, lon: p.coords.longitude, accuracy: Math.round(p.coords.accuracy) };
+          position = { lat: p.coords.latitude, lon: p.coords.longitude, accuracy: Math.round(p.coords.accuracy), at: p.timestamp || Date.now() };
           resolve();
         },
         () => resolve(),
@@ -3428,11 +3435,15 @@ async function refreshJourney() {
       store.set(JOURNEY_KEY, journey);
       renderJourney();
       syncLiveJourney();
-      // Fresh times say a change will be missed, or a vehicle is cancelled: offer a new plan (once per trip).
-      const broken = fresh.cancelled || ["broken", "cancelled"].includes(fresh.analysis?.level);
-      if (broken && !recovery && journey.autoRecovered !== journey.signature) {
-        journey.autoRecovered = journey.signature;
-        recoverJourney(fresh.cancelled || fresh.analysis?.level === "cancelled" ? "cancelled" : "auto");
+      // Live times say a change can't be made, or a vehicle is cancelled: offer a new plan.
+      // Only live data counts (a tight change you chose from the timetable is not "missed"), at most once
+      // per journey, and never after "Keep Current Plan".
+      const cancelled = fresh.cancelled || fresh.analysis?.level === "cancelled";
+      const liveBroken = (fresh.analysis?.transfers ?? []).some((t) => t.realtime && t.level === "broken");
+      if ((cancelled || liveBroken) && !recovery && !journey.recoverMuted && !journey.autoOffered) {
+        journey.autoOffered = true;
+        store.set(JOURNEY_KEY, journey);
+        recoverJourney(cancelled ? "cancelled" : "auto");
       }
     }
   } catch {
@@ -3501,10 +3512,16 @@ function renderJourney() {
   const arrive = j.arrive_at ?? shownTime(j.legs.at(-1).arrival);
   const off = offTripMessage(step);
   // GPS says you missed the vehicle: plan again right away (once per step).
-  if (off && /missed/i.test(off) && !recovery && journey.gpsRecovered !== cur) {
-    journey.gpsRecovered = cur;
-    setTimeout(() => recoverJourney("gps"), 0);
-  }
+  // GPS says you missed the vehicle for 2 minutes in a row: offer a new plan (at most once per journey,
+  // never after "Keep Current Plan").
+  if (off && /missed/i.test(off)) {
+    journey.missSeenAt ??= now;
+    if (now - journey.missSeenAt >= 120_000 && !recovery && !journey.recoverMuted && !journey.autoOffered) {
+      journey.autoOffered = true;
+      store.set(JOURNEY_KEY, journey);
+      setTimeout(() => recoverJourney("gps"), 0);
+    }
+  } else delete journey.missSeenAt;
 
   const html = `
     <section class="card journey-top">
@@ -3637,6 +3654,11 @@ document.addEventListener("click", (e) => {
   if (e.target.closest("#journey-notify")) return showView("settings");
   if (e.target.closest("[data-recover-switch]")) return switchToRecovery();
   if (e.target.closest("[data-recover-dismiss]")) {
+    // "Keep Current Plan": no more automatic suggestions on this journey ("I Missed It" still works).
+    if (journey && recovery?.reason !== "manual") {
+      journey.recoverMuted = true;
+      store.set(JOURNEY_KEY, journey);
+    }
     recovery = null;
     return renderJourney();
   }
@@ -3791,7 +3813,7 @@ if (journey && journeyExpired()) endJourney();
 if (sharedToken) showSharedTrip(sharedToken);
 else showView(journey ? "journey" : views.includes(startView) && startView !== "shared" ? startView : "trip");
 // Opened from a "connection at risk" push: go straight to a new plan.
-if (journey && !sharedToken && startParams.get("recover")) recoverJourney("push");
+if (journey && !sharedToken && startParams.get("recover") && !journey.recoverMuted) recoverJourney("push");
 if (movedIn) setTimeout(() => toast("Welcome to sebway.app! Your places and routes came along. Paste your Claude key and turn alerts on again in Settings.", 7000), 800);
 // First launch (not when opening someone's shared trip): the tutorial.
 if (!sharedToken && !store.get(TUTORIAL_KEY)) showTutorial();

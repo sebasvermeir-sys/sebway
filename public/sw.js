@@ -1,7 +1,7 @@
 // Service worker: makes Sebway installable and lets it open offline.
 // App files: network first (so updates show immediately), cached copy when offline.
 // Live data (/api/*): always from the network, never cached.
-const CACHE = "sebway-v49";
+const CACHE = "sebway-v50";
 const SHELL = ["/", "/styles.css", "/theme.js", "/app.js", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/apple-touch-icon.png", "/icons/icon-maskable-512.png"];
 
 self.addEventListener("install", (event) => {
