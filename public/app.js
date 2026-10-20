@@ -1367,6 +1367,8 @@ $("#walk-min").addEventListener("change", (e) => {
 function renderSettings() {
   const key = store.get("claudeKey");
   $("#walk-min").value = userData.walk_min;
+  // Filled every time Settings opens (the name may have been typed in the tutorial meanwhile).
+  if (document.activeElement !== $("#user-name")) $("#user-name").value = store.get("userName") ?? "";
   renderRoutesManage();
   renderPassesManage();
   renderPush();
@@ -1427,6 +1429,7 @@ $("#user-name").addEventListener("change", () => {
   const name = $("#user-name").value.trim().slice(0, 30);
   if (name) store.set("userName", name);
   else store.remove("userName");
+  toast(name ? `Hi ${name}!` : "Name removed");
 });
 
 // ---------- Privacy: Delete My Data ----------
