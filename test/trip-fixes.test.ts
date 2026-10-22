@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { analyzeJourneys } from "../src/alerts.ts";
 import { toJourneys, type MotisPlan } from "../src/transitous.ts";
-import { applyRideRules, improveTrips, type TrainStatus } from "../src/trip-fixes.ts";
+import { applyRideRules, improveTrips, refreshTrainLegs, type TrainStatus } from "../src/trip-fixes.ts";
+import { cleanTrip } from "../src/live-journey.ts";
 
 // Real Transitous answer: Trône → Gent Heuvelpoort (metro M6 to Gare du Midi, IC train, De Lijn bus).
 const plan = JSON.parse(readFileSync(new URL("./fixtures/transitous-plan.json", import.meta.url), "utf8")) as MotisPlan;
@@ -62,4 +63,31 @@ test("if live train data is unavailable the trip stays as planned", async () => 
   });
   assert.equal(j.legs[1].departure.scheduled, trip.legs[1].departure.scheduled);
   assert.equal(j.legs[1].vehicle_id, trip.legs[1].vehicle_id);
+});
+
+test("journey screen: a trip sent by the app gets the train's new delay and platform", async () => {
+  // What the lock screen said on 22 Oct: +3 min and platform 11 instead of 8.
+  const moved = (): TrainStatus => {
+    const s = liveStatus(3);
+    s.stops[0].departure!.platform = { scheduled: "8", actual: "11", changed: true };
+    return s;
+  };
+  const sent = cleanTrip(JSON.parse(JSON.stringify(trip)));
+  const before = Date.parse(trip.legs[1].departure.scheduled!) - 10 * 60_000;
+  const j = await refreshTrainLegs(sent, async () => moved(), before);
+  const train = j.legs[1];
+  assert.equal(train.departure.delay_min, 3);
+  assert.equal(train.departure.expected, plus(trip.legs[1].departure.scheduled, 3));
+  assert.deepEqual(train.departure.platform, { scheduled: "8", actual: "11", changed: true });
+  assert.equal(j.legs[2].transfer_before!.expected_min, trip.legs[2].transfer_before!.scheduled_min - 3);
+});
+
+test("journey screen: trains already arrived aren't asked again, and failures keep the trip", async () => {
+  const sent = cleanTrip(JSON.parse(JSON.stringify(trip)));
+  let asked = 0;
+  const after = Date.parse(trip.legs[1].arrival.scheduled!) + 60_000;
+  await refreshTrainLegs(sent, async () => (asked++, liveStatus(3)), after);
+  assert.equal(asked, 0);
+  const j = await refreshTrainLegs(sent, async () => { throw new Error("MCP down"); }, 0);
+  assert.equal(j.legs[1].departure.expected, sent.legs[1].departure.expected);
 });

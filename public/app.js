@@ -3419,6 +3419,34 @@ function leaveJourneyView() {
 let journeyLoading = false;
 const JOURNEY_FRESH_MS = 20_000;
 
+/**
+ * Fresh delay, platform and cancellation for each train on the trip, merged into the journey (the map,
+ * walks and the rest stay). Same source as the lock-screen updates. True when the trip was updated.
+ */
+async function refreshLiveTrains() {
+  const trip = journey?.trip;
+  if (!trip?.legs.some((l) => l.mode === "train" && l.vehicle_id)) return false;
+  const live = await api("/api/live-trains", { method: "POST", body: { trip: slimJourney().trip } });
+  // The journey changed while we waited (new plan, ended): these times belong to the old one.
+  if (journey?.trip !== trip || live.legs?.length !== trip.legs.length) return false;
+  const leaveBefore = msOf(shownTime(trip.legs[0].departure));
+  trip.legs = trip.legs.map((l, i) => {
+    const { transfer_before, ...times } = live.legs[i];
+    return { ...l, ...times, transfer_before: l.transfer_before && transfer_before ? { ...l.transfer_before, ...transfer_before } : l.transfer_before };
+  });
+  trip.departure = trip.legs[0].departure;
+  trip.arrival = trip.legs.at(-1).arrival;
+  trip.cancelled = live.cancelled;
+  // Door to door: leave-by and arrival include the walks. Train trips: move leave-by with the first train.
+  if (trip.walk_start_min !== undefined && live.leave_by) trip.leave_by = live.leave_by;
+  if (trip.walk_end_min !== undefined && live.arrive_at) trip.arrive_at = live.arrive_at;
+  const shift = msOf(shownTime(trip.legs[0].departure)) - leaveBefore;
+  const analysis = { ...trip.analysis, ...live.analysis };
+  if (analysis.leave_by && Number.isFinite(shift) && shift) analysis.leave_by = new Date(msOf(analysis.leave_by) + shift).toISOString();
+  trip.analysis = analysis;
+  return true;
+}
+
 async function refreshJourney() {
   clearTimeout(journeyRefresh);
   if (!journey) return;
@@ -3429,28 +3457,40 @@ async function refreshJourney() {
     return;
   }
   journeyLoading = true;
+  let changed = false;
   try {
     const data = await api(`${journey.request.path}?${qs(journey.request.params)}`);
     const fresh = data.journeys?.find((j) => journeySignature(j) === journey.signature);
     if (fresh) {
       journey.trip = fresh;
-      journey.updatedAt = new Date().toISOString();
-      store.set(JOURNEY_KEY, journey);
-      renderJourney();
-      syncLiveJourney();
-      // Live times say a change can't be made, or a vehicle is cancelled: offer a new plan.
-      // Only live data counts (a tight change you chose from the timetable is not "missed"), at most once
-      // per journey, and never after "Keep Current Plan".
-      const cancelled = fresh.cancelled || fresh.analysis?.level === "cancelled";
-      const liveBroken = (fresh.analysis?.transfers ?? []).some((t) => t.realtime && t.level === "broken");
-      if ((cancelled || liveBroken) && !recovery && !journey.recoverMuted && !journey.autoOffered) {
-        journey.autoOffered = true;
-        store.set(JOURNEY_KEY, journey);
-        recoverJourney(cancelled ? "cancelled" : "auto");
-      }
+      changed = true;
     }
   } catch {
+    // Keep the last known times; the trains are still asked below.
+  }
+  // The route search doesn't always find the same trip again (or know the new platform): ask each train
+  // directly, like the lock-screen updates do.
+  try {
+    if (await refreshLiveTrains()) changed = true;
+  } catch {
     // Keep the last known times; try again later.
+  }
+  if (changed && journey) {
+    const trip = journey.trip;
+    journey.updatedAt = new Date().toISOString();
+    store.set(JOURNEY_KEY, journey);
+    renderJourney();
+    syncLiveJourney();
+    // Live times say a change can't be made, or a vehicle is cancelled: offer a new plan.
+    // Only live data counts (a tight change you chose from the timetable is not "missed"), at most once
+    // per journey, and never after "Keep Current Plan".
+    const cancelled = trip.cancelled || trip.analysis?.level === "cancelled";
+    const liveBroken = (trip.analysis?.transfers ?? []).some((t) => t.realtime && t.level === "broken");
+    if ((cancelled || liveBroken) && !recovery && !journey.recoverMuted && !journey.autoOffered) {
+      journey.autoOffered = true;
+      store.set(JOURNEY_KEY, journey);
+      recoverJourney(cancelled ? "cancelled" : "auto");
+    }
   }
   journeyLoading = false;
   journeyRefresh = setTimeout(() => {
@@ -3708,7 +3748,7 @@ if ("serviceWorker" in navigator) {
 // delete the Home Screen icon and set everything up again.
 
 /** Must match CACHE ("sebway-vNN") in public/sw.js; a unit test checks they're the same. */
-const APP_VERSION = 53;
+const APP_VERSION = 54;
 let updateChecked = 0;
 
 async function latestVersion() {

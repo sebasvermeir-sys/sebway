@@ -152,6 +152,24 @@ export async function improveTrips(journeys: Journey[], trainStatus: (id: string
   });
 }
 
+/**
+ * The journey screen's live times: fresh delay, platform and cancellation for each SNCB train on the trip
+ * that hasn't arrived yet (at most `max`), then change times recomputed. Failures keep the leg as it was.
+ */
+export async function refreshTrainLegs(j: Journey, trainStatus: (id: string, date: string) => Promise<TrainStatus | null>, now: number, max = 4): Promise<Journey> {
+  const due = j.legs
+    .map((l, i) => ({ l, i }))
+    .filter(({ l }) => l.mode === "train" && l.operator === "sncb" && l.vehicle_id && l.departure.scheduled && Date.parse(shown(l.arrival) ?? "") > now)
+    .slice(0, max);
+  const statuses = await Promise.all(due.map(({ l }) => trainStatus(l.vehicle_id!, brusselsDate(l.departure.scheduled!)).catch(() => null)));
+  const legs = [...j.legs];
+  due.forEach(({ i }, k) => {
+    const status = statuses[k];
+    if (status) legs[i] = liveTrainLeg(legs[i], status);
+  });
+  return recomputeTimes({ ...j, legs });
+}
+
 // ---------- 3. Safer start: a comfortable change before the first train ----------
 // The route planner picks the latest metro or bus that still technically catches your train, which
 // can leave a 1-minute change at Midi. Everything before the first train is in your hands, so the

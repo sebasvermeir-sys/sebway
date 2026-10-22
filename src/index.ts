@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { analyzeJourneys, neededMinutes } from "./alerts";
 import { attachRouteDisruptions } from "./route-disruptions";
 import { brusselsToIso, findPlaces, planTrip, TransitousError, type Place } from "./transitous";
-import { hasLongWalk, improveTrips, preferRides, saferStarts, SHORT_WALK_MIN, type TrainStatus } from "./trip-fixes";
+import { hasLongWalk, improveTrips, preferRides, refreshTrainLegs, saferStarts, SHORT_WALK_MIN, type TrainStatus } from "./trip-fixes";
 
 /** Live SNCB data for one train (iRail via the MCP). */
 export const liveTrain = (env: Env) => (id: string, date: string) => callTool<TrainStatus>(env, "train_status", { train_id: id, date });
@@ -111,6 +111,7 @@ export default {
       if (url.pathname === "/api/push/key") return json({ publicKey: env.VAPID_PUBLIC_KEY });
       if (url.pathname === "/api/push/subscription" || url.pathname === "/api/push/test") return await handlePush(req, env, url.pathname);
       if (url.pathname === "/api/live-journey") return await handleLiveJourney(req, env);
+      if (url.pathname === "/api/live-trains") return await handleLiveTrains(req, env);
       if (url.pathname === "/api/share" || url.pathname.startsWith("/api/share/")) return await handleShare(req, env, url.pathname);
 
       if (url.pathname === "/api/chat" || url.pathname === "/api/claude-key/check") {
@@ -197,6 +198,34 @@ async function handleLiveJourney(req: Request, env: Env): Promise<Response> {
     if (result.gone) await env.DATA.delete(pushKey(deviceId));
   }
   return json({ ok: true, started: !same });
+}
+
+/**
+ * POST /api/live-trains: fresh delays, platforms and cancellations for the trains on a trip, so the
+ * journey screen shows the same as the lock-screen updates. Answers only the live fields; the app keeps
+ * the rest of its trip (map, walks).
+ */
+async function handleLiveTrains(req: Request, env: Env): Promise<Response> {
+  if (req.method !== "POST") return json({ error: { code: "METHOD_NOT_ALLOWED", message: "Use POST" } }, 405);
+  const { success } = await env.API_LIMIT.limit({ key: clientKey(req) });
+  if (!success) return json({ error: { code: "RATE_LIMITED", message: "Too many requests. Wait a minute.", retryable: true } }, 429);
+  const raw = await req.text();
+  if (raw.length > 30_000) throw new BadInput("Trip too large");
+  let trip;
+  try {
+    trip = cleanTrip((JSON.parse(raw) as { trip?: unknown }).trip);
+  } catch (err) {
+    throw new BadInput(`Not a valid trip (${err instanceof Error ? err.message : "bad JSON"})`);
+  }
+  const fresh = analyzeJourneys([await refreshTrainLegs(trip, liveTrain(env), Date.now())])[0];
+  return json({
+    legs: fresh.legs.map((l) => ({ departure: l.departure, arrival: l.arrival, cancelled: l.cancelled, transfer_before: l.transfer_before })),
+    cancelled: fresh.cancelled,
+    leave_by: fresh.leave_by,
+    arrive_at: fresh.arrive_at,
+    analysis: { level: fresh.analysis.level, message: fresh.analysis.message, transfers: fresh.analysis.transfers },
+    fetched_at: new Date().toISOString(),
+  });
 }
 
 // ---------- Share My Trip ----------
