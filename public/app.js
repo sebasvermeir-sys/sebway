@@ -681,6 +681,7 @@ document.addEventListener("visibilitychange", () => {
 async function searchTrip({ quiet = false } = {}) {
   if (!form.from || !form.to) return;
   if (!quiet) {
+    altTrips = null;
     const ok = await Promise.all([resolveStop($("#from"), MODE_UI[form.mode].fromOp), resolveStop($("#to"), MODE_UI[form.mode].toOp)]);
     if (ok.includes(false)) {
       if (!$("#go-d2d")) $("#results").innerHTML = "";
@@ -730,9 +731,13 @@ async function searchTrip({ quiet = false } = {}) {
       : "";
     const liveLine = live ? `<p class="source">● Live · updates every minute · last ${hhmm(data.meta?.fetched_at)}</p>` : "";
     currentJourneys = data.journeys;
+    mainCount = data.journeys.length;
     const disruptionsById = new Map((data.route_disruptions?.items ?? []).map((d) => [d.id, d]));
     const credit = data.meta?.source === "transitous" ? transitousCredit() : "";
-    results.innerHTML = saveRouteButton(mode, form.from, form.to) + strikeBanner(data, mode) + summaryBanner(data.journeys) + warnings + data.journeys.map((j, i) => journeyCard(j, disruptionsById, i)).join("") + sourceLine(data.meta) + credit + liveLine;
+    results.innerHTML = saveRouteButton(mode, form.from, form.to) + strikeBanner(data, mode) + summaryBanner(data.journeys) + warnings + data.journeys.map((j, i) => journeyCard(j, disruptionsById, i)).join("") + altSectionHtml(mode, data.journeys) + sourceLine(data.meta) + credit + liveLine;
+    renderAltTrips();
+    // Open "without trains" section: refresh it with the rest.
+    if (quiet && altTrips) loadAltTrips();
     renderRouteDisruptions(data.route_disruptions);
     scheduleRefresh(live);
   } catch (err) {
@@ -751,6 +756,58 @@ async function searchTrip({ quiet = false } = {}) {
   } finally {
     $("#search").disabled = false;
   }
+}
+
+// ---------- Trips without trains (on request) ----------
+// The planner's list stays as it is. A button under it loads the best tram/bus/metro trips into their
+// own section, only when asked.
+
+let altTrips = null; // { journeys, disruptions } once loaded for this search
+let mainCount = 0;
+
+function altSectionHtml(mode, journeys) {
+  if (mode !== "commute" || avoidRail || !journeys.some((j) => j.legs.some((l) => l.mode === "train"))) return "";
+  return `<section class="alt-trips" id="alt-trips" aria-live="polite"></section>`;
+}
+
+function renderAltTrips() {
+  const box = document.getElementById("alt-trips");
+  if (!box) return;
+  currentJourneys = currentJourneys.slice(0, mainCount);
+  if (!altTrips) {
+    box.innerHTML = `<button type="button" class="btn alt-open" data-alt-trips>🚋 Show Trips Without Trains</button>`;
+    return;
+  }
+  const list = altTrips.journeys;
+  currentJourneys = [...currentJourneys, ...list];
+  box.innerHTML = `<div class="alt-head"><h3>Without trains</h3><button type="button" class="btn small" data-alt-hide>Hide</button></div>${
+    list.length ? list.map((j, i) => journeyCard(j, altTrips.disruptions, mainCount + i)).join("") : `<div class="notice">No trips without trains found for this time.</div>`
+  }`;
+}
+
+async function loadAltTrips(button) {
+  if (!lastRequest) return;
+  const request = lastRequest;
+  if (button) {
+    button.disabled = true;
+    button.innerHTML = `<span class="spinner" aria-hidden="true"></span> Looking for trams and buses…`;
+  }
+  try {
+    const data = await api(`${request.path}?${qs({ ...request.params, avoid: "rail" })}`);
+    if (lastRequest !== request) return; // a new search started meanwhile
+    altTrips = {
+      journeys: (data.journeys ?? []).filter((j) => !j.legs.some((l) => l.mode === "train")).map((j) => ({ ...j, without_trains: true })),
+      disruptions: new Map((data.route_disruptions?.items ?? []).map((d) => [d.id, d])),
+    };
+  } catch (err) {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "🚋 Show Trips Without Trains";
+      toast(err.message || "Couldn't load trips without trains. Try again.");
+    }
+    return;
+  }
+  renderAltTrips();
 }
 
 /** Required credit for the door-to-door planner (transitous.org/api). */
@@ -859,7 +916,7 @@ function journeyCard(j, disruptionsById = new Map(), mapIndex = null) {
   const alerts = (j.alerts ?? [])
     .map((x) => (typeof x === "string" ? x : x?.title ?? x?.description ?? x?.text))
     .filter(Boolean);
-  const best = j.strike ? `<span class="pill bad pill-tri">${RED_TRIANGLE}May not run</span>` : a?.recommended && a.level === "ok" ? `<span class="pill best">Best option</span>` : "";
+  const best = j.strike ? `<span class="pill bad pill-tri">${RED_TRIANGLE}May not run</span>` : a?.recommended && a.level === "ok" && !j.without_trains ? `<span class="pill best">Best option</span>` : "";
   const strike = j.strike ? `<div class="strike-line">${RED_TRIANGLE}${esc(opNames(j.strike.operators))} strike (${esc(j.strike.when)}): this trip uses ${esc(opNames(j.strike.operators))}.</div>` : "";
   // Sebway moved the start earlier so the change to the train isn't a sprint.
   const s = j.safer_start;
@@ -2951,7 +3008,7 @@ async function startJourney(index) {
     dest: lastRequest.toName || last.to.name,
     destCoords: lastRequest.toCoords?.lat !== undefined ? lastRequest.toCoords : { lat: last.to.lat, lon: last.to.lon },
     // Same search, starting just before this trip, to fetch fresh live times for it.
-    request: { path: lastRequest.path, params: { ...lastRequest.params, time: brusselsHm(firstDep), date: brusselsDay(firstDep), arrive_by: undefined, disruptions: "0" } },
+    request: { path: lastRequest.path, params: { ...lastRequest.params, ...(j.without_trains ? { avoid: "rail" } : {}), time: brusselsHm(firstDep), date: brusselsDay(firstDep), arrive_by: undefined, disruptions: "0" } },
     startedAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -3693,6 +3750,13 @@ function renderJourneyBanner() {
 document.addEventListener("click", (e) => {
   const start = e.target.closest("[data-start-journey]");
   if (start) return startJourney(Number(start.dataset.startJourney));
+  const alt = e.target.closest("[data-alt-trips]");
+  if (alt) return loadAltTrips(alt);
+  if (e.target.closest("[data-alt-hide]")) {
+    altTrips = null;
+    renderAltTrips();
+    return document.getElementById("alt-trips")?.scrollIntoView({ block: "nearest" });
+  }
   if (e.target.closest("#journey-open")) return showView("journey");
   if (e.target.closest("#journey-notify")) return showView("settings");
   if (e.target.closest("[data-recover-switch]")) return switchToRecovery();
@@ -3748,7 +3812,7 @@ if ("serviceWorker" in navigator) {
 // delete the Home Screen icon and set everything up again.
 
 /** Must match CACHE ("sebway-vNN") in public/sw.js; a unit test checks they're the same. */
-const APP_VERSION = 55;
+const APP_VERSION = 58;
 let updateChecked = 0;
 
 async function latestVersion() {

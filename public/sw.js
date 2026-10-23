@@ -9,7 +9,7 @@
 // - files are saved one by one at install, so one failed download doesn't leave nothing saved;
 // - a page load always gets an answer: the network, else the saved app, else a small
 //   "can't connect" page with a Try Again button. Never nothing.
-const CACHE = "sebway-v55";
+const CACHE = "sebway-v58";
 const SHELL = ["/", "/styles.css", "/theme.js", "/app.js", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/apple-touch-icon.png", "/icons/icon-maskable-512.png"];
 /** A page load waits this long for the network before showing the saved app (slow Wi-Fi). */
 const NAV_TIMEOUT_MS = 6000;
