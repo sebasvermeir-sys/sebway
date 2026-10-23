@@ -108,8 +108,6 @@ export interface Journey {
   safer_start?: { at: string; original_change_min: number; change_min: number; earlier_min: number };
   /** Door-to-door: a bus replaced a long walk at the start or end. */
   less_walking?: { saved_min: number; later_min: number };
-  /** Door-to-door: an extra option without trains (tram, bus, metro), added next to the planner's trips. */
-  no_rail?: boolean;
 }
 
 export interface PlanJourneyResult {

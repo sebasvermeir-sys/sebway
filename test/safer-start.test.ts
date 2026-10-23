@@ -91,18 +91,3 @@ test("a long final walk is swapped for a bus on the same train when it's not muc
   // Short walks are left alone.
   assert.equal(preferRides([bus], [walking])[0], bus);
 });
-
-test("tram and bus options are added next to train trips, in order of leaving, never before now", async () => {
-  const { addNoRailOptions } = await import("../src/trip-fixes.ts");
-  const [train] = toJourneys(plan);
-  const local = (startMin: number): Journey => {
-    const legs = [shiftLeg(train.legs[0], startMin)];
-    return { ...train, legs, departure: legs[0].departure, arrival: legs[0].arrival, leave_by: plus(train.leave_by, startMin)! };
-  };
-  const now = Date.parse(train.leave_by!);
-  const out = addNoRailOptions([train], [local(-5), local(3), local(6), local(9)], now);
-  assert.equal(out.length, 3); // the trip that left 5 min ago is dropped, at most 2 are added
-  assert.deepEqual(out.map((j) => Boolean(j.no_rail)), [false, true, true]);
-  // Trips without trains already: nothing to add.
-  assert.equal(addNoRailOptions([local(0)], [local(3)], now).length, 1);
-});

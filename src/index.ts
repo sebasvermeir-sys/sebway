@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { analyzeJourneys, neededMinutes } from "./alerts";
 import { attachRouteDisruptions } from "./route-disruptions";
 import { brusselsToIso, findPlaces, planTrip, TransitousError, type Place } from "./transitous";
-import { addNoRailOptions, hasLongWalk, improveTrips, preferRides, refreshTrainLegs, saferStarts, SHORT_WALK_MIN, type TrainStatus } from "./trip-fixes";
+import { hasLongWalk, improveTrips, preferRides, refreshTrainLegs, saferStarts, SHORT_WALK_MIN, type TrainStatus } from "./trip-fixes";
 
 /** Live SNCB data for one train (iRail via the MCP). */
 export const liveTrain = (env: Env) => (id: string, date: string) => callTool<TrainStatus>(env, "train_status", { train_id: id, date });
@@ -451,11 +451,7 @@ async function handleTrip(env: Env, q: URLSearchParams) {
   const arriveBy = q.get("arrive_by") === "true";
   // ?avoid=rail on SNCB strike days: plan with metro, tram and bus only.
   const noRail = q.get("avoid") === "rail";
-  // Alongside: the best trips without trains, so tram and bus options are offered too.
-  const [plan, busTram] = await Promise.all([
-    planTrip(from, to, { date, time, arriveBy, noRail }),
-    noRail ? null : planTrip(from, to, { date, time, arriveBy, noRail: true, results: 3 }).catch(() => null),
-  ]);
+  const plan = await planTrip(from, to, { date, time, arriveBy, noRail });
   // Never leave before the asked time ("now", or the "leave at" time).
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Brussels" }).format(new Date());
   const earliest = arriveBy ? undefined : time ? Date.parse(brusselsToIso(date ?? today, time)) : date && date !== today ? undefined : Date.now();
@@ -464,7 +460,6 @@ async function handleTrip(env: Env, q: URLSearchParams) {
     const fewerWalks = await planTrip(from, to, { date, time, arriveBy, noRail, maxWalkMin: SHORT_WALK_MIN, results: 6 }).catch(() => null);
     if (fewerWalks) plan.journeys = preferRides(plan.journeys, fewerWalks.journeys, earliest);
   }
-  if (busTram) plan.journeys = addNoRailOptions(plan.journeys, busTram.journeys, earliest);
   const improved = await improveTrips(plan.journeys, liveTrain(env));
   // Tight change before the first train? Plan the start again to arrive with a comfortable margin.
   const safer = await saferStarts(improved, (dest, by) => planTrip(from, dest, { at: by, arriveBy: true, results: 2, light: true, noRail }).then((p) => p.journeys), {
