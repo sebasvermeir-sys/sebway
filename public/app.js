@@ -1303,6 +1303,7 @@ function renderChat() {
         <strong>Ask about any trip in Belgium.</strong>
         <p class="small muted" style="margin:4px 0 12px">Answers use live SNCB, STIB and De Lijn data. Every time comes from a source shown under the reply.</p>
         ${hasKey ? "" : `<p class="small" style="margin:0 0 12px">First add your Claude API key in <button type="button" class="linkish" data-goto="settings">Settings</button>.</p>`}
+        <p class="small" style="margin:0 0 12px">AI assistant (Claude). It can make mistakes; times come from live data.</p>
         <div class="suggestions">
           <button type="button" data-ask="Midi to Gent, now?">Midi to Gent, now?</button>
           <button type="button" data-ask="When is the next metro at Trône?">Next metro at Trône?</button>
@@ -3812,7 +3813,7 @@ if ("serviceWorker" in navigator) {
 // delete the Home Screen icon and set everything up again.
 
 /** Must match CACHE ("sebway-vNN") in public/sw.js; a unit test checks they're the same. */
-const APP_VERSION = 58;
+const APP_VERSION = 59;
 let updateChecked = 0;
 
 async function latestVersion() {
