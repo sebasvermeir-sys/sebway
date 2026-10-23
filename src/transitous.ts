@@ -149,9 +149,10 @@ export async function planTrip(
 
 // ---------- Conversion to Sebway's journey format (pure, unit-tested) ----------
 
+// MOTIS names: SUBWAY is a metro, METRO is suburban rail (S-trains, e.g. SNCB S53 Gent → Lokeren).
 const MODE: Record<string, Mode> = {
   SUBWAY: "metro",
-  METRO: "metro",
+  METRO: "train",
   TRAM: "tram",
   BUS: "bus",
   COACH: "bus",
@@ -257,8 +258,9 @@ export function toJourneys(plan: MotisPlan): Journey[] {
         if (p) walkPaths.push(p);
         continue;
       }
-      const mode = MODE[l.mode];
       const operator = operatorOf(`${l.agencyName ?? ""} ${l.agencyId ?? ""}`);
+      // Everything SNCB runs is a train, whatever the feed calls it (Belgium's only metro is STIB's).
+      const mode = operator === "sncb" ? "train" : MODE[l.mode];
       const rt = Boolean(l.realTime);
       const departure = time(l.from.departure ?? l.startTime, l.from.scheduledDeparture ?? l.scheduledStartTime, rt, l.from.track, l.from.scheduledTrack);
       const arrival = time(l.to.arrival ?? l.endTime, l.to.scheduledArrival ?? l.scheduledEndTime, rt, l.to.track, l.to.scheduledTrack);

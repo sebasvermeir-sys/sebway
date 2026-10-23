@@ -3748,7 +3748,7 @@ if ("serviceWorker" in navigator) {
 // delete the Home Screen icon and set everything up again.
 
 /** Must match CACHE ("sebway-vNN") in public/sw.js; a unit test checks they're the same. */
-const APP_VERSION = 54;
+const APP_VERSION = 55;
 let updateChecked = 0;
 
 async function latestVersion() {

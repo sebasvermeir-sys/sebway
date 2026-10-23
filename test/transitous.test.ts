@@ -83,3 +83,14 @@ test("address search keeps Belgian results only, with short labels and no duplic
     ],
   );
 });
+
+test("S-trains are trains: Transitous calls them METRO (e.g. SNCB S53 Gent → Lokeren), Gent has no metro", () => {
+  const copy = JSON.parse(JSON.stringify(plan)) as MotisPlan;
+  const rail = copy.itineraries[0].legs.find((l) => l.mode === "REGIONAL_RAIL")!;
+  rail.mode = "METRO";
+  const [j] = toJourneys(copy);
+  assert.deepEqual(j.legs.map((l) => l.mode), ["metro", "train", "bus"]); // the Brussels metro (SUBWAY) stays a metro
+  // Anything SNCB runs is a train, whatever the feed calls it.
+  rail.mode = "TRAM";
+  assert.equal(toJourneys(copy)[0].legs[1].mode, "train");
+});
