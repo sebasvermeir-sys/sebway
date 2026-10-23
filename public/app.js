@@ -681,6 +681,7 @@ document.addEventListener("visibilitychange", () => {
 async function searchTrip({ quiet = false } = {}) {
   if (!form.from || !form.to) return;
   if (!quiet) {
+    tripFilter = "all";
     const ok = await Promise.all([resolveStop($("#from"), MODE_UI[form.mode].fromOp), resolveStop($("#to"), MODE_UI[form.mode].toOp)]);
     if (ok.includes(false)) {
       if (!$("#go-d2d")) $("#results").innerHTML = "";
@@ -732,7 +733,7 @@ async function searchTrip({ quiet = false } = {}) {
     currentJourneys = data.journeys;
     const disruptionsById = new Map((data.route_disruptions?.items ?? []).map((d) => [d.id, d]));
     const credit = data.meta?.source === "transitous" ? transitousCredit() : "";
-    results.innerHTML = saveRouteButton(mode, form.from, form.to) + strikeBanner(data, mode) + summaryBanner(data.journeys) + warnings + data.journeys.map((j, i) => journeyCard(j, disruptionsById, i)).join("") + sourceLine(data.meta) + credit + liveLine;
+    results.innerHTML = saveRouteButton(mode, form.from, form.to) + strikeBanner(data, mode) + summaryBanner(data.journeys) + warnings + tripFilterHtml(data.journeys) + data.journeys.map((j, i) => journeyCard(j, disruptionsById, i)).join("") + sourceLine(data.meta) + credit + liveLine;
     renderRouteDisruptions(data.route_disruptions);
     scheduleRefresh(live);
   } catch (err) {
@@ -756,6 +757,35 @@ async function searchTrip({ quiet = false } = {}) {
 /** Required credit for the door-to-door planner (transitous.org/api). */
 const transitousCredit = () =>
   `<p class="source">Door-to-door routes by <a href="https://transitous.org/sources/" target="_blank" rel="noopener">Transitous</a>, from the open timetables of SNCB, STIB, De Lijn and TEC and OpenStreetMap.</p>`;
+
+// ---------- Other ways: trips with and without trains ----------
+// Door-to-door results also hold the best tram/bus/metro trips (no_rail). A filter shows one kind.
+
+let tripFilter = "all";
+const tripKind = (j) => (j.legs.some((l) => l.mode === "train") ? "train" : "local");
+const TRIP_FILTERS = [
+  ["all", "All"],
+  ["train", "🚆 Train"],
+  ["local", "🚋 Tram & Bus"],
+];
+
+/** The filter row, only when the results hold both kinds. */
+function tripFilterHtml(journeys) {
+  const kinds = new Set(journeys.map(tripKind));
+  if (kinds.size < 2) return "";
+  return `<div class="filter-chips trip-filters" role="group" aria-label="Show trips">${TRIP_FILTERS.map(([k, label]) => `<button type="button" data-trip-filter="${k}" aria-pressed="${tripFilter === k}">${label}</button>`).join("")}</div>`;
+}
+
+function applyTripFilter() {
+  for (const b of document.querySelectorAll("[data-trip-filter]")) b.setAttribute("aria-pressed", String(b.dataset.tripFilter === tripFilter));
+  for (const card of document.querySelectorAll("#results article.journey[data-kind]")) card.hidden = tripFilter !== "all" && card.dataset.kind !== tripFilter;
+}
+
+/** "tram and bus" for a trip's vehicles. */
+function modesText(j) {
+  const names = [...new Set(j.legs.map((l) => (MODE_LABEL[l.mode] ?? l.mode).toLowerCase()))];
+  return names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names.at(-1)}` : names[0];
+}
 
 /** Top-of-results alert: the next trip has a problem, or the best option isn't the first one. */
 const OP_LABEL = { sncb: "SNCB", stib: "STIB", delijn: "De Lijn", tec: "TEC" };
@@ -867,12 +897,13 @@ function journeyCard(j, disruptionsById = new Map(), mapIndex = null) {
   const lessWalk = lw
     ? `<div class="safer-start">🚌 Takes a bus instead of ${lw.saved_min} more minutes of walking${lw.later_min > 0 ? ` (arrives ${lw.later_min} min later)` : ""}.</div>`
     : "";
+  const otherWay = j.no_rail ? `<div class="safer-start">🚋 Another way: ${esc(modesText(j))}, no train.</div>` : "";
   const safer = s
     ? `<div class="safer-start">🛟 Safer start: leave ${s.earlier_min ? `${s.earlier_min} min earlier` : "a bit earlier"} and get ${s.change_min} min to change at ${esc(s.at)}, instead of ${Math.max(0, s.original_change_min)}.</div>`
     : "";
 
   return `
-    <article class="card journey${j.cancelled ? " cancelled" : ""}${a ? ` level-${a.level}` : ""}">
+    <article class="card journey${j.cancelled ? " cancelled" : ""}${a ? ` level-${a.level}` : ""}" data-kind="${tripKind(j)}"${tripFilter !== "all" && tripFilter !== tripKind(j) ? " hidden" : ""}>
       <div class="journey-head">
         <div>
           <div class="journey-times"><span class="nowrap">${hhmm(shownTime(dep))} → ${hhmm(shownTime(arr))}</span>${delayedDep ? ` <s>${hhmm(dep.scheduled)}</s>` : ""}</div>
@@ -884,6 +915,7 @@ function journeyCard(j, disruptionsById = new Map(), mapIndex = null) {
       ${alertHtml(a)}
       ${tripDisruptionsHtml(j, disruptionsById)}
       ${leave}
+      ${otherWay}
       ${safer}
       ${lessWalk}
       <ol class="legs">${j.legs.map((leg, i) => legHtml(leg, j.legs[i - 1], a?.transfers?.find((t) => t.leg_index === i))).join("")}</ol>
@@ -3693,6 +3725,11 @@ function renderJourneyBanner() {
 document.addEventListener("click", (e) => {
   const start = e.target.closest("[data-start-journey]");
   if (start) return startJourney(Number(start.dataset.startJourney));
+  const filter = e.target.closest("[data-trip-filter]");
+  if (filter) {
+    tripFilter = filter.dataset.tripFilter;
+    return applyTripFilter();
+  }
   if (e.target.closest("#journey-open")) return showView("journey");
   if (e.target.closest("#journey-notify")) return showView("settings");
   if (e.target.closest("[data-recover-switch]")) return switchToRecovery();
@@ -3748,7 +3785,7 @@ if ("serviceWorker" in navigator) {
 // delete the Home Screen icon and set everything up again.
 
 /** Must match CACHE ("sebway-vNN") in public/sw.js; a unit test checks they're the same. */
-const APP_VERSION = 55;
+const APP_VERSION = 56;
 let updateChecked = 0;
 
 async function latestVersion() {

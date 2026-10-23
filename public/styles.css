@@ -1080,3 +1080,4 @@ input::-webkit-date-and-time-value { text-align: left; }
 .update-banner span { flex: 1; }
 .update-banner .btn { background: var(--card); color: var(--heading); border-color: var(--card); }
 .update-x { width: var(--hit); height: var(--hit); border: 0; background: none; color: inherit; font-size: 22px; line-height: 1; }
+.trip-filters { margin: 12px 0 4px; }

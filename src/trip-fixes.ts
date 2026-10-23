@@ -340,3 +340,26 @@ export function preferRides(journeys: Journey[], alternatives: Journey[], earlie
     return { ...best, less_walking: { saved_min: totalWalk(j) - totalWalk(best), later_min: mins(j.arrive_at, best.arrive_at)! } };
   });
 }
+
+// ---------- 5. Other ways: options without trains ----------
+// The planner picks the fastest trips, often all by train (in Gent: an S-train for a ride a tram also
+// does). One extra request without trains adds the best tram/bus/metro options, so you can choose.
+
+/** At most this many trips without trains are added. */
+export const NO_RAIL_OPTIONS = 2;
+
+export const usesRail = (j: Journey) => j.legs.some((l) => l.mode === "train");
+const leaveMs = (j: Journey) => Date.parse(j.leave_by ?? shown(j.departure) ?? "");
+
+/**
+ * The planner's trips plus up to NO_RAIL_OPTIONS trips without trains (only when the planner's trips use
+ * a train, and never leaving before `earliest`), in order of leaving.
+ */
+export function addNoRailOptions(journeys: Journey[], noRail: Journey[], earliest?: number): Journey[] {
+  if (!journeys.some(usesRail)) return journeys;
+  const extra = noRail
+    .filter((j) => j.legs.length && !usesRail(j) && (earliest === undefined || leaveMs(j) >= earliest - 60_000))
+    .slice(0, NO_RAIL_OPTIONS)
+    .map((j) => ({ ...j, no_rail: true }));
+  return [...journeys, ...extra].sort((a, b) => leaveMs(a) - leaveMs(b));
+}
