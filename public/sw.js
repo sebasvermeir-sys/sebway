@@ -9,10 +9,12 @@
 // - files are saved one by one at install, so one failed download doesn't leave nothing saved;
 // - a page load always gets an answer: the network, else the saved app, else a small
 //   "can't connect" page with a Try Again button. Never nothing.
-const CACHE = "sebway-v59";
+const CACHE = "sebway-v60";
 const SHELL = ["/", "/styles.css", "/theme.js", "/app.js", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/apple-touch-icon.png", "/icons/icon-maskable-512.png"];
 /** A page load waits this long for the network before showing the saved app (slow Wi-Fi). */
-const NAV_TIMEOUT_MS = 6000;
+const NAV_TIMEOUT_MS = 3000;
+/** Same for the app's own files (styles, code): the page stays blank until they arrive. */
+const FILE_TIMEOUT_MS = 3000;
 
 const OFFLINE_PAGE = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Sebway</title>
 <style>body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;font-family:-apple-system,system-ui,sans-serif;background:#f3f5fb;color:#0b1430;text-align:center}
@@ -94,14 +96,22 @@ async function navigate(event) {
   }
 }
 
-/** App files: network first ("no-cache" = ask the server if it changed), else the saved copy. */
+/**
+ * App files: network first ("no-cache" = ask the server if it changed), else the saved copy. A slow
+ * network gets the saved copy after a few seconds (the fresh one is still saved for next time).
+ */
 async function file(event) {
-  try {
-    const res = await fetch(event.request.url, { cache: "no-cache" });
+  const saved = () => caches.match(event.request, { ignoreSearch: true });
+  const network = fetch(event.request.url, { cache: "no-cache" }).then(async (res) => {
     remember(event.request, res);
-    return res;
+    // A Wi-Fi login or filter page answered instead of the real file: use the saved one if we have it.
+    return saveable(res) ? res : ((await saved()) ?? res);
+  });
+  try {
+    const timeout = new Promise((resolve) => setTimeout(() => saved().then((r) => r && resolve(r)), FILE_TIMEOUT_MS));
+    return await Promise.race([network, timeout]);
   } catch {
-    return (await caches.match(event.request, { ignoreSearch: true })) ?? Response.error();
+    return (await saved()) ?? Response.error();
   }
 }
 

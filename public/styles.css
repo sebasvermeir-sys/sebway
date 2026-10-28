@@ -1080,7 +1080,3 @@ input::-webkit-date-and-time-value { text-align: left; }
 .update-banner span { flex: 1; }
 .update-banner .btn { background: var(--card); color: var(--heading); border-color: var(--card); }
 .update-x { width: var(--hit); height: var(--hit); border: 0; background: none; color: inherit; font-size: 22px; line-height: 1; }
-.alt-trips { margin: 16px 0 8px; }
-.alt-open { width: 100%; justify-content: center; }
-.alt-head { display: flex; align-items: center; justify-content: space-between; gap: var(--gap); margin: 8px 0; }
-.alt-head h3 { margin: 0; font-size: var(--t-title3); }

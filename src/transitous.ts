@@ -125,21 +125,25 @@ export async function planTrip(
   // Short shared cache: the same question within 30 s is answered once (light on Transitous).
   const cache = (globalThis as { caches?: { default?: Cache } }).caches?.default;
   const cacheKey = new Request(url);
-  let res = cache ? await cache.match(cacheKey) : undefined;
-  if (!res) {
+  const cached = cache ? await cache.match(cacheKey) : undefined;
+  let plan: MotisPlan;
+  if (cached) {
+    plan = (await cached.json()) as MotisPlan;
+  } else {
+    let res: Response;
     try {
       res = await fetch(url, { headers: { "User-Agent": USER_AGENT, Accept: "application/json" }, signal: AbortSignal.timeout(12_000) });
     } catch (err) {
       throw new TransitousError(`Route planner unreachable (${String(err)})`);
     }
     if (!res.ok) throw new TransitousError(`Route planner HTTP ${res.status}`);
-    if (cache) {
-      const copy = new Response(res.clone().body, res);
-      copy.headers.set("Cache-Control", `public, max-age=${CACHE_SECONDS}`);
-      await cache.put(cacheKey, copy);
+    const body = await res.text();
+    plan = JSON.parse(body) as MotisPlan;
+    // Only answers with trips are kept: an empty one (a hiccup) would otherwise be repeated for 30 s.
+    if (cache && plan.itineraries?.length) {
+      await cache.put(cacheKey, new Response(body, { headers: { "Content-Type": "application/json", "Cache-Control": `public, max-age=${CACHE_SECONDS}` } }));
     }
   }
-  const plan = (await res.json()) as MotisPlan;
   return {
     meta: { schema_version: "1", source: "transitous", fetched_at: new Date().toISOString(), stale: false },
     query: { from, to, time, arrive_by: Boolean(opts.arriveBy) },
