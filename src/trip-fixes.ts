@@ -170,6 +170,25 @@ export async function refreshTrainLegs(j: Journey, trainStatus: (id: string, dat
   return recomputeTimes({ ...j, legs });
 }
 
+// ---------- Only the fast trips ----------
+// The planner also lists much slower trips with fewer changes (e.g. 132 min by S-train + bus instead of
+// 74 min by train). Nobody takes those: keep the trips close to the fastest one, in order of leaving.
+
+/** A trip may take this much longer than the fastest one (minutes), or SLOW_RATIO of it on long trips. */
+export const SLOW_EXTRA_MIN = 20;
+const SLOW_RATIO = 0.25;
+
+const leaveMs = (j: Journey) => Date.parse(j.leave_by ?? shown(j.departure) ?? "");
+const tripMin = (j: Journey) => (Date.parse(j.arrive_at ?? shown(j.arrival) ?? "") - leaveMs(j)) / 60_000;
+
+export function fastTripsOnly(journeys: Journey[]): Journey[] {
+  const fastest = Math.min(...journeys.map(tripMin).filter(Number.isFinite));
+  if (!Number.isFinite(fastest)) return journeys;
+  const limit = fastest + Math.max(SLOW_EXTRA_MIN, fastest * SLOW_RATIO);
+  // Same departure: the one that arrives first goes first.
+  return journeys.filter((j) => !(tripMin(j) > limit)).sort((a, b) => leaveMs(a) - leaveMs(b) || tripMin(a) - tripMin(b));
+}
+
 // ---------- 3. Safer start: a comfortable change before the first train ----------
 // The route planner picks the latest metro or bus that still technically catches your train, which
 // can leave a 1-minute change at Midi. Everything before the first train is in your hands, so the

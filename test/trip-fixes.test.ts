@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { analyzeJourneys } from "../src/alerts.ts";
 import { toJourneys, type MotisPlan } from "../src/transitous.ts";
-import { applyRideRules, improveTrips, refreshTrainLegs, type TrainStatus } from "../src/trip-fixes.ts";
+import { applyRideRules, fastTripsOnly, improveTrips, refreshTrainLegs, type TrainStatus } from "../src/trip-fixes.ts";
 import { cleanTrip } from "../src/live-journey.ts";
 
 // Real Transitous answer: Trône → Gent Heuvelpoort (metro M6 to Gare du Midi, IC train, De Lijn bus).
@@ -90,4 +90,16 @@ test("journey screen: trains already arrived aren't asked again, and failures ke
   assert.equal(asked, 0);
   const j = await refreshTrainLegs(sent, async () => { throw new Error("MCP down"); }, 0);
   assert.equal(j.legs[1].departure.expected, sent.legs[1].departure.expected);
+});
+
+test("only trips close to the fastest one are kept, in order of leaving", () => {
+  // 22 Oct-style case: Brussels-Luxembourg → Ghent, 74–86 min by train, plus 132 min by S-train + bus.
+  const at = (leave: string, minutes: number) => ({ ...trip, leave_by: leave, arrive_at: plus(leave, minutes) });
+  const fast = at("2026-10-28T09:09:00Z", 74);
+  const later = at("2026-10-28T09:23:00Z", 84);
+  const slow = at("2026-10-28T09:12:00Z", 132);
+  const kept = fastTripsOnly([later, slow, fast]);
+  assert.deepEqual(kept, [fast, later]);
+  // Long trips get a bit more room (a quarter of the fastest time).
+  assert.equal(fastTripsOnly([at("2026-10-28T08:00:00Z", 200), at("2026-10-28T08:10:00Z", 245)]).length, 2);
 });

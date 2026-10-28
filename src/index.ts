@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { analyzeJourneys, neededMinutes } from "./alerts";
 import { attachRouteDisruptions } from "./route-disruptions";
 import { brusselsToIso, findPlaces, planTrip, TransitousError, type Place } from "./transitous";
-import { hasLongWalk, improveTrips, preferRides, refreshTrainLegs, saferStarts, SHORT_WALK_MIN, type TrainStatus } from "./trip-fixes";
+import { fastTripsOnly, hasLongWalk, improveTrips, preferRides, refreshTrainLegs, saferStarts, SHORT_WALK_MIN, type TrainStatus } from "./trip-fixes";
 
 /** Live SNCB data for one train (iRail via the MCP). */
 export const liveTrain = (env: Env) => (id: string, date: string) => callTool<TrainStatus>(env, "train_status", { train_id: id, date });
@@ -472,7 +472,8 @@ async function handleTrip(env: Env, q: URLSearchParams) {
     const sig = `${j.leave_by}|${j.arrive_at}|${j.legs.map((l) => `${l.line}@${l.departure.scheduled}`).join(">")}`;
     return !seen.has(sig) && seen.add(sig);
   });
-  const analyzed = analyzeJourneys(unique, null);
+  // Only trips close to the fastest one, in order of leaving (no 2-hour detours with fewer changes).
+  const analyzed = analyzeJourneys(fastTripsOnly(unique), null);
   const avoid = noRail ? "rail" : null;
   if (q.get("disruptions") === "0") return { ...plan, avoid, journeys: analyzed };
   const { journeys, route_disruptions } = await attachRouteDisruptions(env, analyzed);
